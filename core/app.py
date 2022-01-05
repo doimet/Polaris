@@ -2,7 +2,6 @@
 import os
 import sys
 import time
-import yaml
 import threading
 import importlib
 import functools
@@ -234,7 +233,6 @@ class Application:
                 },
                 self.threshold
             )
-
             if self.options.get('shell', False):
                 # 暂停消息线程
                 self.event.clear()

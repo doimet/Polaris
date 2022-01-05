@@ -58,14 +58,14 @@ def build_login_dict(method=1, username='admin', password='admin'):
     else:
         raise Exception('password not found!')
 
-    if method == '0':
+    if method == 0:
         return username_list, password_list
-    elif method == '1' and all([isinstance(username_list, list), isinstance(password_list, list)]):
+    elif method == 1 and all([isinstance(username_list, list), isinstance(password_list, list)]):
         if len(username_list) != len(password_list):
             raise Exception('单点登录模式: 账密数量不一致')
         for username, password in zip(username_list, password_list):
             yield username, password
-    elif method == '2' and all([isinstance(username_list, list), isinstance(password_list, list)]):
+    elif method == 2 and all([isinstance(username_list, list), isinstance(password_list, list)]):
         for username in (username_list or ['admin']):
             for password in (password_list or ['admin']):
                 yield username, password

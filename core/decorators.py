@@ -25,6 +25,10 @@ class Cli:
                 self.c_depth += 1
                 kwargs.update({name: attrs})
                 if self.c_depth == self.t_depth:
+                    if not cls.target.args.shell:
+                        args = tuple([_.get('default') for _ in kwargs.values()])
+                        return func(cls, *args)
+
                     cls.log.root(f'开始进入终端模式 [quit:退出|help:帮助|run:运行]{" " * 10}')
                     cls.log.echo(f"\n    {cls.__info__.get('description', '暂无关于此漏洞的描述信息')}\n")
                     while True:

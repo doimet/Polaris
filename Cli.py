@@ -34,7 +34,7 @@ def show_banner(func):
     def wrapper(options, processors):
         os.system('')
         print(f"""
-    \033[0;31mPolaris - 渗透测试框架 1.0.2\033[0m
+    \033[0;31mPolaris - 渗透测试框架 1.0.3\033[0m
 
  =# Author: 浮鱼
  =# Github: https://github.com/doimet/Polaris
@@ -144,6 +144,7 @@ def main(options, processors):
 
 @cli.command(name='collect')
 @click.option('--plugin', '-p', help='指定信息搜集的插件.', multiple=True)
+@click.option('--shell', '-S', help='开启插件的终端模式.', is_flag=True)
 @click.option('--list', '-L', help='列出插件的详细信息.', is_flag=True)
 @click.help_option('--help', '-H', help='显示帮助信息并退出.')
 def collect(**kwargs):
@@ -153,7 +154,6 @@ def collect(**kwargs):
 
 @cli.command(name='exploit')
 @click.option('--plugin', '-p', help='指定漏洞利用的插件.', multiple=True)
-@click.option('--attack', '-A', help='指定漏洞利用的模式.', is_flag=True)
 @click.option('--shell', '-S', help='开启插件的终端模式.', is_flag=True)
 @click.option('--list', '-L', help='列出插件的详细信息.', is_flag=True)
 @click.help_option('--help', '-H', help='显示帮助信息并退出.')
@@ -164,10 +164,7 @@ def exploit(**kwargs):
 
 @cli.command(name='login')
 @click.option('--plugin', '-p', help='指定漏洞利用的插件.', multiple=True)
-@click.option('--method', '-m', help='指定口令爆破的模式.', type=click.Choice(['0', '1', '2']), default='1')
-@click.option('--username', '-un', help='登录账户序列或文件.')
-@click.option('--password', '-pw', help='登录密码序列或文件.')
-@click.option('--timeout', '-t', help='指定服务超时的时间.', default=5)
+@click.option('--shell', '-S', help='开启插件的终端模式.', is_flag=True)
 @click.option('--list', '-L', help='列出插件的详细信息.', is_flag=True)
 @click.help_option('--help', '-H', help='显示帮助信息并退出.')
 def login(**kwargs):
@@ -177,6 +174,7 @@ def login(**kwargs):
 
 @cli.command(name='auxiliary')
 @click.option('--plugin', '-p', help='指定漏洞利用的插件.', multiple=True)
+@click.option('--shell', '-S', help='开启插件的终端模式.', is_flag=True)
 @click.option('--list', '-L', help='列出插件的详细信息.', is_flag=True)
 @click.help_option('--help', '-H', help='显示帮助信息并退出.')
 def auxiliary(**kwargs):

@@ -24,6 +24,9 @@ class Logging(logging.Logger):
         # self.__setFileHandler__()
         self.__setStreamHandler__()
 
+    def set_level(self, level):
+        self.setLevel(level)
+
     def __setFileHandler__(self, level=30):
         filename = os.path.join('logs', '{}.log'.format(self.name))
         file_handler = TimedRotatingFileHandler(filename=filename, when='D', interval=1, backupCount=1)
