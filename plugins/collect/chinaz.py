@@ -7,7 +7,7 @@ class Plugin(Base):
     __info__ = {
         "author": "doimet",
         "references": ["http://mtool.chinaz.com", "http://micp.chinaz.com"],
-        "desc": "站长之家查询",
+        "description": "站长之家查询",
         "datetime": "2021-12-27"
     }
 

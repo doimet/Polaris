@@ -4,10 +4,8 @@ import hashlib
 import random
 import socket
 import httpx
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 import requests.packages.urllib3
-from httpx import Client
-from requests.adapters import HTTPAdapter
 
 requests.packages.urllib3.disable_warnings()
 
@@ -45,7 +43,8 @@ class DNSProxy:
 class Request:
     """ 网络封装 """
 
-    def __init__(self):
+    def __init__(self, target):
+        self.target = target
         self.url_cache = {}
         self.current_url = ''
         self.headers = {
@@ -79,11 +78,12 @@ class Request:
                 raise Exception({"message": "Couldn't resolve DNS"})
         return host
 
-    def request(self, method='get', url='', *args, **kwargs):
+    def request(self, method='get', url=None, path=None, *args, **kwargs):
+        if not url and path:
+            url = urljoin(self.target.value, path)
         if url in self.url_cache:
             return self.url_cache[url]
         self.current_url = url
-
         self.headers.update(kwargs.get('headers', {}))
         kwargs.update({'headers': self.headers})
         try:

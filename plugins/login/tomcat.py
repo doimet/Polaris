@@ -8,7 +8,7 @@ class Plugin(Base):
     __info__ = {
         "author": "doimet",
         "references": ["-"],
-        "desc": "tomcat口令破解",
+        "description": "tomcat口令破解",
         "datetime": "2021-12-31"
     }
 

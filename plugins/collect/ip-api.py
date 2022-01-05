@@ -5,7 +5,7 @@ class Plugin(Base):
     __info__ = {
         "author": "doimet",
         "references": ["http://ip-api.com"],
-        "desc": "获取网站的物理地址",
+        "description": "获取网站的物理地址",
         "datetime": "2021-12-27"
     }
 

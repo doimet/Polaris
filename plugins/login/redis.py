@@ -7,7 +7,7 @@ class Plugin(Base):
     __info__ = {
         "author": "doimet",
         "references": ["-"],
-        "desc": "redis服务口令破解",
+        "description": "redis服务口令破解",
         "datetime": "2022-01-02"
     }
 

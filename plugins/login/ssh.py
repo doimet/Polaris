@@ -7,7 +7,7 @@ class Plugin(Base):
     __info__ = {
         "author": "doimet",
         "references": ["-"],
-        "desc": "ssh服务口令破解",
+        "description": "ssh服务口令破解",
         "datetime": "2021-12-31"
     }
 

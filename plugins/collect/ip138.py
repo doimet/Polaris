@@ -6,7 +6,7 @@ class Plugin(Base):
     __info__ = {
         "author": "doimet",
         "references": ["https://site.ip138.com"],
-        "desc": "IP138查询",
+        "description": "IP138查询",
         "datetime": "2021-12-27"
     }
 

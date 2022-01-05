@@ -5,7 +5,7 @@ class Plugin(Base):
     __info__ = {
         "author": "doimet",
         "references": ["https://www.cmd5.com"],
-        "desc": "CMD5解密",
+        "description": "CMD5解密",
         "datetime": "2021-12-27"
     }
 

@@ -23,7 +23,9 @@
   + `load_file`
   + `build_login_dict`
 ## 内置装饰器
-+ `Cli`: 方法装饰器, 将方法扩展成可输入的终端模式
++ `cli`: 类方法装饰器, 将方法扩展成可交互的终端模式(使用--shell参数调用)
+  + cli.command: 适用于无参数的情况
+  + cli.options: 适用于有参数的情况
 
 ## 插件模板
 ### 信息收集插件模板
@@ -36,7 +38,7 @@ class Plugin(Base):
     __info__ = {
         "author": "作者",
         "references": ["来源"],
-        "desc": "描述信息",
+        "description": "描述信息",
         "datetime": "日期"
     }
 
@@ -53,22 +55,19 @@ class Plugin(Base):
     __info__ = {
         "author": "作者",
         "references": ["来源"],
-        "desc": "描述信息",
+        "description": "描述信息",
         "datetime": "日期"
     }
 
     def url(self) -> dict:
         """ 验证代码 """
         ...
-
+    
+    @Cli.options('cmd', description="执行命令", default="whoami")
     def attack(self) -> dict:
         """ 利用代码 """
         ...
 
-    @Cli.options('cmd', desc="执行命令", default="whoami")
-    def shell(self, cmd) -> str:
-        """ shell代码 """
-        ...
 ```
 ### 口令爆破插件模板
 ```shell script
@@ -80,7 +79,7 @@ class Plugin(Base):
     __info__ = {
         "author": "作者",
         "references": ["来源"],
-        "desc": "描述信息",
+        "description": "描述信息",
         "datetime": "日期"
     }
 
@@ -108,7 +107,7 @@ class Plugin(Base):
     __info__ = {
         "author": "作者",
         "references": ["来源"],
-        "desc": "描述信息",
+        "description": "描述信息",
         "datetime": "日期"
     }
 
@@ -121,3 +120,4 @@ class Plugin(Base):
 1. 为了方便对插件返回数据进行处理, 插件的返回数据类型需统一为`dict`(shell方法返回值类型需是`str`)
 2. 除非调用内置打印输出方法, 任何写在插件内部的打印输出方法都不会被执行
 3. 插件内定义的方法名称并非固定的, 而是根据这个插件所接受的输入类型来以此命名的
+4. 一个插件类限定只允许使用一个类方法装饰器

@@ -6,7 +6,7 @@ class Plugin(Base):
     __info__ = {
         "author": "doimet",
         "references": ["https://riddler.io"],
-        "desc": "riddler查询",
+        "description": "riddler查询",
         "datetime": "2021-12-31"
     }
 

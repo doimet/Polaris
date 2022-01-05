@@ -2,11 +2,10 @@
 import os
 import sys
 import time
-import platform
+import yaml
 import threading
 import importlib
 import functools
-import urllib.parse
 from core.output import OutputModule
 from core.base import PluginBase, PluginObject, Logging
 from core.common import get_table_form, merge_ip_segment
@@ -46,7 +45,6 @@ class Application:
                 self.dataset.append({'root': target_tuple[1], 'content': content})
             else:
                 self.log.error('the target cannot access')
-        # print(self.dataset)
 
     def shows(self):
         """ 获取插件列表 """
@@ -58,22 +56,22 @@ class Application:
             plugin_obj = self.get_plugin_object(os.path.join(file_path, filename))
 
             plugin_info = plugin_obj.__info__
-            """ 这里需要优化 """
-            support = '/'.join(plugin_obj({}, {}).__support__())
+            func_dict = plugin_obj({}, {}).func_dict
+            support = '/'.join(func_dict.get('method')+['shell' if func_dict.get('decorate') else ''])
             status = '\033[0;31m✖ \033[0m' if (
                     filename[:-3] in self.config.keys() and self.config[filename[:-3]].get('enable', False)
             ) else '\033[0;92m✔ \033[0m'
             show_list.append([
                 {
                     '名称': filename[:-3],
-                    '描述': plugin_info['desc'],
+                    '描述': plugin_info['description'],
                     '支持': support,
                     '状态': status
                 },
                 {
                     '名称': filename[:-3],
                     '作者': plugin_info['author'],
-                    '描述': plugin_info['desc'],
+                    '描述': plugin_info['description'],
                     '支持': support,
                     '来源': ', '.join(plugin_info['references']) if isinstance(plugin_info['references'], list) else
                     plugin_info['references'],
@@ -193,7 +191,7 @@ class Application:
                 return True
         return False
 
-    def echo_handle(self, name=None, data=None, key=None):
+    def echo_handle(self, name=None, data=None, key='result'):
         """ 数据回显处理 """
 
         if isinstance(data, str) or isinstance(data, int):
@@ -240,22 +238,18 @@ class Application:
             if self.options.get('shell', False):
                 # 暂停消息线程
                 self.event.clear()
-                call_func_name = 'shell'
-            elif self.options.get('attack', False):
-                call_func_name = 'attack'
+                call_func_name = obj.func_dict.get('decorate')
+                if call_func_name:
+                    data = getattr(obj, call_func_name)()
+                else:
+                    raise Exception('decorated function not found')
+                # 恢复消息线程
+                self.event.set()
             else:
-                call_func_name = target_tuple[0]
-
-            """ 屏蔽插件内输出 """
-            if call_func_name != 'shell':
+                """ 屏蔽插件内输出 """
                 sys.stdout = open(os.devnull, 'w')
-                data = getattr(obj, call_func_name)()
+                data = getattr(obj, target_tuple[0])()
                 sys.stdout = sys.__stdout__
-            else:
-                data = getattr(obj, call_func_name)()
-
-            # 恢复消息线程
-            self.event.set()
             return data
         except Exception as e:
             self.log.warn(f'{str(e)} (plugin:{plugin_name})')
@@ -300,7 +294,7 @@ class Application:
 
         res = set()
         for file_path, filename in self.list_path_file(path):
-            if filename.endswith('.py') and not filename.startswith('_'):
+            if (filename.endswith('.py') or filename.endswith('.yaml')) and not filename.startswith('_'):
                 if names:
                     for name in names:
                         if name[0] == '!' and filename[:-3] in [name[1:] for name in names]:
@@ -350,14 +344,18 @@ class Application:
         plugin_object = PluginObject(reg_dict)
         return plugin_object
 
-    def get_plugin_object(self, filepath):
+    def get_plugin_object(self, file_path):
         """
         1.获取插件对象
         2.更新插件信息
         """
         plugin_object = self.build_plugin_object()
-        plugin_code = open(filepath, "rb").read()
-        exec(plugin_code, plugin_object)
-        plugin = plugin_object['Plugin']
+        if file_path.endswith('.yaml'):
+            raise Exception('开发中')
+        else:
+            with open(file_path, "rb") as f:
+                plugin_code = f.read()
+            exec(plugin_code, plugin_object)
+            plugin = plugin_object['Plugin']
         plugin.__info__.update({k: v for k, v in PluginBase.__info__.items() if k not in plugin.__info__.keys()})
         return plugin

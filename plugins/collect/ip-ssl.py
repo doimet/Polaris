@@ -8,7 +8,7 @@ class Plugin(Base):
     __info__ = {
         "author": "doimet",
         "references": ["-"],
-        "desc": "通过SSL证书获取子域名",
+        "description": "通过SSL证书获取子域名",
         "datetime": "2021-12-27"
     }
 

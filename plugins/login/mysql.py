@@ -7,7 +7,7 @@ class Plugin(Base):
     __info__ = {
         "author": "doimet",
         "references": ["-"],
-        "desc": "mysql服务口令破解",
+        "description": "mysql服务口令破解",
         "datetime": "2021-12-27"
     }
 

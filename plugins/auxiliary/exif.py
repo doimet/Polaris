@@ -7,7 +7,7 @@ class Plugin(Base):
     __info__ = {
         "author": "doimet",
         "references": ["-"],
-        "desc": "获取图片中隐藏的信息",
+        "description": "获取图片中隐藏的信息",
         "datetime": "2021-12-31"
     }
 

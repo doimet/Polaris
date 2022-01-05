@@ -156,24 +156,30 @@ class PluginBase(Request):
     __info__ = {
         "name": "-",
         "author": "-",
+        "description": "-",
         "references": ["-"],
-        "desc": "-",
         "datetime": "-"
     }
 
     def __init__(self, target, threshold):
-        Request.__init__(self)
-        self.threshold = threshold
         self.target = DictObject(target)
+        Request.__init__(self, self.target)
+        self.threshold = threshold
         self.log = Logging(level=target.get('args', {}).get('verbose', 20))
         self.async_pool = AsyncioExecute
 
-    def __support__(self):
-        support_func = []
+    @property
+    def func_dict(self):
+        method_func = []
+        decorated_func = ''
         for k, v in self.__class__.__dict__.items():
-            if type(v).__name__ == 'function' and k not in ['__init__', 'attack', 'shell', 'task']:
-                support_func.append(k)
-        return support_func
+            if type(v).__name__ == 'function' and k not in ['__init__', 'task']:
+                if v.__name__ == 'inner':
+                    decorated_func = k
+                else:
+                    method_func.append(k)
+
+        return {'method': method_func, 'decorate': decorated_func}
 
 
 class DictObject(dict):

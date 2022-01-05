@@ -6,7 +6,7 @@ class Plugin(Base):
     __info__ = {
         "author": "doimet",
         "references": ["https://crt.sh"],
-        "desc": "证书查询子域名",
+        "description": "证书查询子域名",
         "datetime": "2021-12-27"
     }
 

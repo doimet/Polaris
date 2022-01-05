@@ -5,7 +5,7 @@ class Plugin(Base):
     __info__ = {
         "author": "doimet",
         "references": ["https://dns.bufferover.run"],
-        "desc": "bufferover查询",
+        "description": "bufferover查询",
         "datetime": "2022-01-01"
     }
 

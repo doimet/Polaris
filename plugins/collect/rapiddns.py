@@ -6,7 +6,7 @@ class Plugin(Base):
     __info__ = {
         "author": "doimet",
         "references": ["https://rapiddns.io"],
-        "desc": "rapiddns查询",
+        "description": "rapiddns查询",
         "datetime": "2021-12-27"
     }
 

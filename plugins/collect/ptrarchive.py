@@ -6,7 +6,7 @@ class Plugin(Base):
     __info__ = {
         "author": "doimet",
         "references": ["http://ptrarchive.com"],
-        "desc": "ptrarchive查询",
+        "description": "ptrarchive查询",
         "datetime": "2022-01-01"
     }
 

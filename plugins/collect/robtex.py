@@ -6,7 +6,7 @@ class Plugin(Base):
     __info__ = {
         "author": "doimet",
         "references": ["https://www.robtex.com"],
-        "desc": "robtex查询",
+        "description": "robtex查询",
         "datetime": "2022-01-01"
     }
 

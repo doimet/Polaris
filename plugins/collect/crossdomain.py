@@ -6,7 +6,7 @@ class Plugin(Base):
     __info__ = {
         "author": "doimet",
         "references": ["https://www.robtex.com"],
-        "desc": "crossdomain提取子域名",
+        "description": "crossdomain提取子域名",
         "datetime": "2022-01-01"
     }
 

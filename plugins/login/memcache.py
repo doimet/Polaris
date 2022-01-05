@@ -7,7 +7,7 @@ class Plugin(Base):
     __info__ = {
         "author": "doimet",
         "references": ["-"],
-        "desc": "memcache服务口令破解",
+        "description": "memcache服务口令破解",
         "datetime": "2022-01-02"
     }
 
