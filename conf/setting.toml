@@ -26,3 +26,21 @@ link = "https://www.cmd5.com"
 [ipinfo]
 key = ""
 link = "http://ipinfo.io"
+
+[hunter]
+key = ""
+link = "https://api.hunter.io"
+
+[virustotal]
+key = ""
+link = "https://www.virustotal.com"
+
+[circl]
+user = ""
+pwd = ""
+link = "https://www.circl.lu"
+
+[censys]
+api_id = ""
+secret = ""
+link = "https://censys.io"

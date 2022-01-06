@@ -62,7 +62,7 @@
     ```shell script
     python Cli.py --input domain:360.com collect
     python Cli.py --input domain:360.com collect --plugin china
-    python Cli.py --input domain:360.com collect --plugin china --pugin ip138
+    python Cli.py --input domain:360.com collect --plugin china --plugin ip138
     python Cli.py --input domain:360.com collect --plugin !ksubdomain
     ```
 + 收集ip信息
@@ -80,17 +80,14 @@ python Cli.py --input url:http://example.com exploit
 python Cli.py --input url:http://example.com exploit --plugin CVE-2021-22205
 python Cli.py --input url:http://example.com exploit --plugin CVE-2021-22205 --shell
 ```
+指定`shell`参数可进入交互模式
 ### 口令爆破
 
 ```shell script
 python Cli.py --input ip:x.x.x.x login
 python Cli.py --input ip:x.x.x.x login --plugin ssh
-python Cli.py --input ip:x.x.x.x login --plugin ssh --username root --password root --method 1
-python Cli.py --input ip:x.x.x.x login --plugin ssh --username username.txt --password password.txt --method 2
+python Cli.py --input ip:x.x.x.x login --plugin ssh --shell
 ```
-`method`可选参数:   
-1. 单点模式: 一个账号对应一个密码   
-2. 交叉模式: 多个账号对应多个密码
 
 ### 渗透辅助
 + MD5解密
