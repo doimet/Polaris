@@ -11,7 +11,7 @@ class Plugin(Base):
         "datetime": "2021-12-31"
     }
 
-    def image(self) -> dict:
+    def file(self) -> dict:
         with open(self.target.value, 'rb') as f:
             exif_dict = exifread.process_file(f)
         lon_ref = exif_dict.get('GPS GPSLongitudeRef', '')

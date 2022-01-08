@@ -31,35 +31,35 @@
     ```shell script
     python Cli.py --help
     ```
-    ![avatar](docs/images/screenshort_01.png)
+    ![Image](docs/images/screenshort_01.png)
     ```shell script
     python Cli.py {命令} --help
     ```
-    ![avatar](docs/images/screenshort_02.png)
+    ![Image](docs/images/screenshort_02.png)
     可选命令: `collect`、`exploit`、`login`、`auxiliary`
 + 查看插件信息
     ```shell script
     python Cli.py {命令} --list
     ```
-    ![avatar](docs/images/screenshort_03.png)
+    ![Image](docs/images/screenshort_03.png)
     ```shell script
     python Cli.py {命令} --plugin '{插件}' --list
     ```
-    ![avatar](docs/images/screenshort_04.png)
+    ![Image](docs/images/screenshort_04.png)
     ```shell script
     python Cli.py {命令} --plugin '@{类型}' --list
     ```
-    ![avatar](docs/images/screenshort_05.png)
+    ![Image](docs/images/screenshort_05.png)
     ```shell script
     python Cli.py {命令} --plugin '!{插件}' --list
     ```
-    ![avatar](docs/images/screenshort_06.png)
+    ![Image](docs/images/screenshort_06.png)
     可选类型: `ip`、`domain`、`subdomain`、`url`、`company`、`email`、`md5`等
 + 运行命令格式
     ```shell script
     python Cli.py --input {类型}:{目标/文件} {调用命令} {调用参数}
     ```
-    ![avatar](docs/images/screenshort_07.png)
+    ![Image](docs/images/screenshort_07.png)
     可选输出文件类型: `json`
 ## 使用示例
 
@@ -100,6 +100,10 @@ python Cli.py --input ip:x.x.x.x login --plugin ssh --shell
 + MD5解密
 ```shell script
 python Cli.py --input md5:1a79a4d60de6718e8e5b326e338ae533 auxiliary --plugin md5
+```
++ 识别杀软
+```shell script
+python Cli.py --input file:tasklist.txt auxiliary --plugin whatav
 ```
 
 ### 命令联动

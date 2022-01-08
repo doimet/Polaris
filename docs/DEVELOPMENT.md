@@ -22,7 +22,6 @@
   + `build_random_lower_str`: 生成随机小写字符串
   + `build_random_upper_str`: 生成随机大写字符串
   + `jsonp_to_json`: jsonp字符串转json
-  + `load_file`
   + `build_login_dict`
 ## 内置装饰器
 + `cli`: 类方法装饰器, 将方法扩展成可交互的终端模式(使用--shell参数调用)

@@ -50,19 +50,6 @@ def jsonp_to_json(jsonp_str):
     return json.loads(re.match(".*?({.*}).*", jsonp_str, re.S).group(1))
 
 
-def load_file(dict_file):
-    """ 加载文件 """
-    if os.path.isfile(dict_file):
-        file_ext = os.path.splitext(dict_file)[-1]
-        with open(dict_file, encoding='utf-8') as f:
-            if file_ext == '.json':
-                for one in json.load(f):
-                    yield one
-            else:
-                for line in f:
-                    yield line.strip()
-
-
 def build_login_dict(method=1, username='admin', password='admin'):
     """ 构建口令破解字典 """
     if os.path.isfile(username):

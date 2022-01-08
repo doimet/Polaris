@@ -34,7 +34,7 @@ def show_banner(func):
     def wrapper(options, processors):
         os.system('')
         print(f"""
-    \033[0;31mPolaris - 渗透测试框架 1.1.0\033[0m
+    \033[0;31mPolaris - 渗透测试框架 1.1.1\033[0m
 
  =# Author: 浮鱼
  =# Github: https://github.com/doimet/Polaris
@@ -70,8 +70,11 @@ def parse_input_param(ctx, param, value):
     if match:
         task_list, key, value = [], match.group(1), match.group(2)
         if os.path.isfile(value):
-            with open(value, encoding='utf-8') as f:
-                value_list = filter(lambda x: x != '', list(set(map(lambda x: x.strip(), f.readlines()))))
+            if key == 'file':
+                value_list = [value]
+            else:
+                with open(value, encoding='utf-16') as f:
+                    value_list = filter(lambda x: x != '', list(set(map(lambda x: x.strip(), f.readlines()))))
         else:
             value_list = [value]
         for value in value_list:

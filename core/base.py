@@ -210,6 +210,7 @@ class XrayPoc(PluginBase):
     def url(self):
         vars = {}
         condition = {}
+        env = celpy.Environment()
 
         for k, v in self.__vars__.items():
             if 'request' in str(v):
@@ -275,9 +276,7 @@ class XrayPoc(PluginBase):
             def string(value):
                 return str(value)
 
-            env = celpy.Environment()
-            expression = v['expression']
-            ast = env.compile(expression)
+            ast = env.compile(v['expression'])
             prgm = env.program(
                 ast,
                 functions=[

@@ -249,9 +249,9 @@ class Application:
                 self.event.set()
             else:
                 """ 屏蔽插件内输出 """
-                sys.stdout = open(os.devnull, 'w')
+                # sys.stdout = open(os.devnull, 'w')
                 data = getattr(obj, target_tuple[0])()
-                sys.stdout = sys.__stdout__
+                # sys.stdout = sys.__stdout__
             return data
         except Exception as e:
             self.log.warn(f'{str(e)} (plugin:{plugin_name})')
