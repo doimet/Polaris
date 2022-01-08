@@ -10,11 +10,11 @@
   + `log.info`: 用于输出普通信息
   + `log.warn`: 用于输出警告信息
   + `log.error`: 用于输出错误信息
-+ `async_pool`
++ `async_pool`: 用于创建异步连接池
 
 ## 内置方法
 + 网络请求: 
-  + `request`: 
+  + `request`: 同requests
   + `async_http`:异步时调用
 + 其他方法:
   + `build_random_int`: 生成随机整数
