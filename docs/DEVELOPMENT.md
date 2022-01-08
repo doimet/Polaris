@@ -17,9 +17,11 @@
   + `request`: 
   + `async_http`:异步时调用
 + 其他方法:
-  + `build_random_int`
-  + `build_random_str`
-  + `jsonp_to_json`
+  + `build_random_int`: 生成随机整数
+  + `build_random_str`: 生成随机字符串
+  + `build_random_lower_str`: 生成随机小写字符串
+  + `build_random_upper_str`: 生成随机大写字符串
+  + `jsonp_to_json`: jsonp字符串转json
   + `load_file`
   + `build_login_dict`
 ## 内置装饰器

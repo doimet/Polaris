@@ -21,3 +21,4 @@ ldap3~=2.9.1
 pymssql~=2.2.3
 pymongo~=4.0.1
 pymemcache~=3.5.0
+cel-python~=0.1.5

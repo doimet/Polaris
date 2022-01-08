@@ -10,6 +10,17 @@ import requests.packages.urllib3
 requests.packages.urllib3.disable_warnings()
 
 
+class RewriteString(str):
+    def __new__(cls, value):
+        return super().__new__(cls, value)
+
+    def contains(self, value):
+        if str(value) in self:
+            return True
+        else:
+            return False
+
+
 class DNSProxy:
     _rules, _host, old = [], None, _socket.getaddrinfo
 
@@ -133,6 +144,8 @@ class Request:
 
         response.md5 = hashlib.md5(response.content).hexdigest()
         response.length = self.unit_convert(content_length)
+        response.body = response.text
+
         return response
 
 

@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import base64 as b64
 import random
 import string
 
@@ -9,16 +10,38 @@ def build_random_str(length=8):
 
     """ 随机字符串 """
 
-    username = ''.join(random.sample(string.ascii_letters, length))
-    return username
+    return ''.join(random.sample(string.ascii_letters, length))
 
 
-def build_random_int(length=8):
+def build_random_lower_str(length=8):
+    """ 随机小写字符串 """
+
+    return ''.join(random.sample(string.ascii_lowercase, length))
+
+
+randomLowercase = build_random_lower_str
+
+
+def build_random_upper_str(length=8):
+    """ 随机大写字符串 """
+
+    return ''.join(random.sample(string.ascii_uppercase, length))
+
+
+randomUppercase = build_random_upper_str
+
+
+def build_random_int(min_length=8, max_length=16):
 
     """ 随机整数 """
 
-    nickname = ''.join(random.sample(string.ascii_letters + string.digits, length))
-    return nickname
+    return random.randint(min_length, max_length)
+
+
+randomInt = build_random_int
+
+
+base64 = b64.b64encode
 
 
 def jsonp_to_json(jsonp_str):

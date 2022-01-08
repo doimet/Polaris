@@ -83,7 +83,7 @@ def get_table_form(data, seq=500, layout='horizontal', border=True, align='c'):
             tb.align[title] = align
         for index, one in enumerate(data[:seq]):
             if isinstance(one, dict):
-                col_len = int(150 / (len(one.values()) + 1))
+                col_len = int(120 / (len(one.values()) + 1))
                 one_value = [
                     str(_).strip()[:col_len] + ' ...' if len(str(_)) > col_len else str(_).strip() for _ in one.values()
                 ]
@@ -95,7 +95,7 @@ def get_table_form(data, seq=500, layout='horizontal', border=True, align='c'):
         if isinstance(data, list) and len(data) == 1:
             data = data[0]
         for key, value in data.items():
-            value = (value, str(value)[:150] + '...')[len(str(value)) > 150]
+            value = (value, str(value)[:120] + '...')[len(str(value)) > 120]
             tb.add_row([key, value])
             tb.align[key] = align
     else:

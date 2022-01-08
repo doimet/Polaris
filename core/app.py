@@ -5,8 +5,12 @@ import time
 import threading
 import importlib
 import functools
+from pathlib import Path
+
+import yaml
+
 from core.output import OutputModule
-from core.base import PluginBase, PluginObject, Logging
+from core.base import PluginBase, PluginObject, Logging, XrayPoc
 from core.common import get_table_form, merge_ip_segment
 from core.common import merge_same_data, keep_data_format
 from core.static import command_items_alias
@@ -51,24 +55,24 @@ class Application:
         show_list = []
 
         base_path = os.path.join('plugins', self.options['command'])
-        for file_path, filename in self.get_plugin_list(base_path, self.options['plugin']):
-            plugin_obj = self.get_plugin_object(os.path.join(file_path, filename))
+        for file_path, file_name, file_ext in self.get_plugin_list(base_path, self.options['plugin']):
+            plugin_obj = self.get_plugin_object(os.path.join(file_path, file_name+file_ext))
 
             plugin_info = plugin_obj.__info__
             func_dict = plugin_obj({}, {}).func_dict
-            support = '/'.join(func_dict.get('method')+['shell' if func_dict.get('decorate') else ''])
+            support = '/'.join(func_dict.get('method') + ['shell' if func_dict.get('decorate') else ''])
             status = '\033[0;31m✖ \033[0m' if (
-                    filename[:-3] in self.config.keys() and self.config[filename[:-3]].get('enable', False)
+                    file_name in self.config.keys() and self.config[file_name].get('enable', False)
             ) else '\033[0;92m✔ \033[0m'
             show_list.append([
                 {
-                    '名称': filename[:-3],
+                    '名称': file_name,
                     '描述': plugin_info['description'],
                     '支持': support,
                     '状态': status
                 },
                 {
-                    '名称': filename[:-3],
+                    '名称': file_name,
                     '作者': plugin_info['author'],
                     '描述': plugin_info['description'],
                     '支持': support,
@@ -113,12 +117,12 @@ class Application:
                     if target_tuple in cache:
                         continue
                     base_path = os.path.join('plugins', self.options['command'])
-                    for file_path, filename in self.get_plugin_list(base_path, self.options['plugin']):
-                        plugin_obj = self.get_plugin_object(os.path.join(file_path, filename))
+                    for file_path, file_name, file_ext in self.get_plugin_list(base_path, self.options['plugin']):
+                        plugin_obj = self.get_plugin_object(os.path.join(file_path, file_name+file_ext))
                         if target_tuple[0] not in dir(plugin_obj):
                             continue
                         self.job_total += 1
-                        future = executor.submit(self.job_func, filename[:-3], target_tuple, plugin_obj)
+                        future = executor.submit(self.job_func, file_name, target_tuple, plugin_obj)
                         future.add_done_callback(self.on_finish)
                         task_list.append(future)
                     cache.add(target_tuple)
@@ -184,8 +188,8 @@ class Application:
 
     def has_command(self, command):
         plugin_list = self.get_plugin_list('plugins', self.options['plugin'])
-        for file_path, filename in plugin_list:
-            plugin_obj = self.get_plugin_object(os.path.join(file_path, filename))
+        for file_path, file_name, file_ext in plugin_list:
+            plugin_obj = self.get_plugin_object(os.path.join(file_path, file_name+file_ext))
             if command in dir(plugin_obj):
                 return True
         return False
@@ -292,10 +296,11 @@ class Application:
 
         res = set()
         for file_path, filename in self.list_path_file(path):
-            if (filename.endswith('.py') or filename.endswith('.yaml')) and not filename.startswith('_'):
+            file_stem, file_ext = Path(filename).stem, Path(filename).suffix
+            if file_ext in ['.py', '.yml'] and not filename.startswith('_'):
                 if names:
                     for name in names:
-                        if name[0] == '!' and filename[:-3] in [name[1:] for name in names]:
+                        if name[0] == '!' and file_stem in [name[1:] for name in names]:
                             continue
                         elif name.startswith('@'):
                             callback_func = name.strip('@')
@@ -303,13 +308,13 @@ class Application:
                             if callback_func not in dir(plugin_obj):
                                 continue
                             else:
-                                res.add((path, filename))
-                        elif filename[:-3] == name or is_exclude:
-                            res.add((file_path, filename))
+                                res.add((path, file_stem, file_ext))
+                        elif file_stem == name or is_exclude:
+                            res.add((file_path, file_stem, file_ext))
                         else:
                             continue
                 else:
-                    res.add((file_path, filename))
+                    res.add((file_path, file_stem, file_ext))
         return res
 
     @staticmethod
@@ -348,8 +353,20 @@ class Application:
         2.更新插件信息
         """
         plugin_object = self.build_plugin_object()
-        if file_path.endswith('.yaml'):
-            raise Exception('开发中')
+        if file_path.endswith('.yml'):
+            plugin = XrayPoc
+            with open(file_path, encoding='utf8') as f:
+                content = yaml.load(f, Loader=yaml.FullLoader)
+            plugin.__info__ = {
+                'name': content['name'],
+                'author': content['detail'].get('author', ''),
+                'references': content['detail'].get('links', []),
+                'description': ''
+            }
+            plugin.__vars__ = content.get('set', {})
+            plugin.__rule__ = content['rules']
+            plugin.__logic__ = content['expression']
+            plugin.__output__ = content.get('output', {})
         else:
             with open(file_path, "rb") as f:
                 plugin_code = f.read()
