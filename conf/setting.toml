@@ -44,3 +44,11 @@ link = "https://www.circl.lu"
 api_id = ""
 secret = ""
 link = "https://censys.io"
+
+[whoisxmlapi]
+key = ""
+link = "https://subdomains.whoisxmlapi.com"
+
+[securitytrails]
+key = ""
+link = "https://securitytrails.com"
