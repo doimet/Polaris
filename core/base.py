@@ -10,12 +10,16 @@ import celpy
 import yaml
 import functools
 import sys
-import base64 as b64
 import logging
-from urllib import parse
+import urllib.parse
+from base64 import b64encode, b64decode
+from Cryptodome.Cipher import AES, PKCS1_OAEP
+from Cryptodome.PublicKey import RSA
+from Cryptodome.Hash import SHA256
 from flashtext import KeywordProcessor
-from core.request import Request
 from logging.handlers import TimedRotatingFileHandler
+from core.request import Request
+
 
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
@@ -105,6 +109,80 @@ class Logging(logging.Logger):
             sys.exit(1)
 
 
+class EchoQueryExecute:
+    def __init__(self):
+        rsa = RSA.generate(2048)
+        random_str = str(uuid4())
+        self.public_key = rsa.publickey().exportKey()
+        self.private_key = rsa.exportKey()
+        self.secret = random_str
+        self.correlation_id = random_str[:20]
+        self.result = None
+        self.session = Request()
+        self.create()
+
+    def create(self):
+        self.session.headers.update({"Content-Type": "application/json"})
+        self.session.request(
+            method="post",
+            url="https://interact.sh/register",
+            json={
+                "public-key": b64encode(self.public_key).decode("utf-8"),
+                "secret-key": self.secret,
+                "correlation-id": self.correlation_id
+            }
+        )
+
+    def get_domain(self):
+        domain = self.correlation_id
+        while len(domain) < 33:
+            domain += chr(ord('a') + random.randint(1, 24))
+        domain += ".interact.sh"
+        return domain
+
+    def get_url(self):
+        pass
+
+    def select(self):
+        count = 3
+        result = []
+        while count:
+            try:
+                with self.session.request(
+                        method="get",
+                        url=f"https://interact.sh/poll?id={self.correlation_id}&secret={self.secret}"
+                ) as r:
+                    resp = r.json()
+                    for i in resp['data']:
+                        cipher = PKCS1_OAEP.new(RSA.importKey(self.private_key), hashAlgo=SHA256)
+                        decode = b64decode(i)
+                        cryptor = AES.new(
+                            key=cipher.decrypt(b64decode(resp['aes_key'])),
+                            mode=AES.MODE_CFB,
+                            IV=decode[:AES.block_size],
+                            segment_size=128
+                        )
+                        plain_text = cryptor.decrypt(decode)
+                        result.append(json.loads(plain_text[16:]))
+                    return result
+            except Exception as e:
+                count -= 1
+                time.sleep(1)
+                continue
+        return []
+
+    @property
+    def verify(self):
+        status, self.result = self.select()
+        return True if status else False
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        return self
+
+
 class AsyncioExecute(object):
     """ 异步执行器 """
 
@@ -185,6 +263,7 @@ class PluginBase(Request):
         self.threshold = threshold
         self.log = Logging(level=target.get('args', {}).get('verbose', 20))
         self.async_pool = AsyncioExecute
+        self.echo_query = EchoQueryExecute
 
     @property
     def func_dict(self):
@@ -239,7 +318,7 @@ class XrayPoc(PluginBase):
             def icontains(src, value):
                 return True if value in src else False
 
-            def bsubmatch(reg, srv):
+            def bsubmatch(reg, src):
                 return re.search(reg, src)
 
             def bmatches(reg, src):
@@ -251,18 +330,18 @@ class XrayPoc(PluginBase):
             def base64(value):
                 if isinstance(value, str):
                     value = value.encode()
-                return b64.b64encode(value).encode()
+                return b64encode(value).decode()
 
             def base64Decode(value):
                 if isinstance(value, str):
                     value = value.encode()
-                return b64.b64decode(value).encode()
+                return b64decode(value).decode()
 
             def urlencode(value):
                 return urllib.parse.quote(value, safe='/', encoding=None, errors=None)
 
             def urldecode(value):
-                return urllib.parse.unquote(value, encoding='utf-8', error='replace')
+                return urllib.parse.unquote(value, encoding='utf-8')
 
             def substr(value, start, end):
                 return str(value)[start:end]

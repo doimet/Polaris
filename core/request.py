@@ -54,7 +54,7 @@ class DNSProxy:
 class Request:
     """ 网络封装 """
 
-    def __init__(self, target):
+    def __init__(self, target=None):
         self.target = target
         self.url_cache = {}
         self.current_url = ''
@@ -90,7 +90,7 @@ class Request:
         return host
 
     def request(self, method='get', url=None, path=None, *args, **kwargs):
-        if not url and path:
+        if not url and path and self.target:
             url = urljoin(self.target.value, path)
         if url in self.url_cache:
             return self.url_cache[url]

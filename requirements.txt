@@ -22,3 +22,5 @@ pymssql~=2.2.3
 pymongo~=4.0.1
 pymemcache~=3.5.0
 cel-python~=0.1.5
+pycryptodomex~=3.12.0
+xid~=1.0.3
