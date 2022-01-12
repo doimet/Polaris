@@ -134,6 +134,7 @@ class EchoQueryExecute:
         )
 
     def get_domain(self):
+        """ 获取域名 """
         domain = self.correlation_id
         while len(domain) < 33:
             domain += chr(ord('a') + random.randint(1, 24))
@@ -141,9 +142,11 @@ class EchoQueryExecute:
         return domain
 
     def get_url(self):
+        """ 获取url """
         pass
 
     def select(self):
+        """ 轮询结果 """
         count = 3
         result = []
         while count:
@@ -173,6 +176,7 @@ class EchoQueryExecute:
 
     @property
     def verify(self):
+        """ 验证 """
         status, self.result = self.select()
         return True if status else False
 

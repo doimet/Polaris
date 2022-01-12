@@ -19,13 +19,50 @@
   + `async_http`:异步时调用
 + 其他方法:
   + `build_random_int`: 生成随机整数
+    ```
+    build_random_int(length: int) -> int
+    传入生成长度
+    返回随机整数
+    ```
   + `build_random_str`: 生成随机字符串
+    ```
+    build_random_str(length: int) -> str
+    传入生成长度
+    返回随机字符串
+    ```
   + `build_random_lower_str`: 生成随机小写字符串
+    ```
+    build_random_lower_str(length: int) -> str
+    传入生成长度
+    返回随机小写字符串
+    ```
   + `build_random_upper_str`: 生成随机大写字符串
+    ```
+    build_random_upper_str(length: int) -> str
+    传入生成长度
+    返回随机大写字符串
+    ```
   + `jsonp_to_json`: jsonp字符串转json
-  + `build_login_dict`
+    ```
+    jsonp_to_json(jsonp_str: str) -> dict
+    传入jsonp字符串
+    返回字典类型数据
+    ```
+  + `build_web_shell`: 生成WebShell
+    ```
+    build_web_shell(lang: str) -> tuple
+    传入生成的脚本语言
+    返回webshell代码、webshell密码、webshell验证代码
+    注: 目前只支持php、asp、aspx三种语言, 后面会添加jsp
+    ```
+  + `build_login_dict`: 构建口令字典
+    ```
+    build_login_dict(method: int, username: str, password: str) -> iterable
+    传入口令组合模式、用户名称字典、用户密码字典
+    返回用户名称、用户密码
+    ```
 ## 内置装饰器
-+ `cli`: 类方法装饰器, 将方法扩展成可交互的终端模式(使用--shell参数调用)
++ `cli`: 类方法装饰器, 将方法扩展成可交互模式(使用--shell参数调用)
   + cli.command: 适用于无参数的情况
   + cli.options: 适用于有参数的情况
 

