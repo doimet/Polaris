@@ -108,7 +108,7 @@ class Plugin(Base):
 
 ```
 ### 口令爆破插件模板
-```shell script
+```python
 # -*-* coding:UTF-8
 import os
 
@@ -127,10 +127,9 @@ class Plugin(Base):
     @cli.options('username', desc="用户账号或字典文件", default=os.path.join('data', 'mysql_username'))
     @cli.options('password', desc="用户密码或字典文件", default=os.path.join('data', 'mysql_password'))
     @cli.options('timeout', desc="设置连接超时时间", default=5)
-    def ip(self, ip, port, method, username, username, timeout) -> dict:
-        """ 编写代码 """
+    def ip(self, ip, port, method, username, password, timeout) -> dict:
         with self.async_pool(max_workers=self.config.general.asyncio, threshold=self.threshold) as execute:
-            for username, password in self.build_login_dict(method=method, username=username, password=username):
+            for u, p in self.build_login_dict(method=method, username=username, password=password):
                 execute.submit(self.custom_task, ip, port, u, p, timeout)
             return {'LoginInfo': execute.result()}
 
