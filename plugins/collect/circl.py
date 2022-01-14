@@ -14,7 +14,7 @@ class Plugin(Base):
         r = self.request(
             method='get',
             url=f'https://www.circl.lu/pdns/query/{self.target.value}',
-            auth=(self.target.setting.user, self.target.setting.pwd)
+            auth=(self.config.circl.user, self.config.circl.pwd)
         )
         if r.status_code == 401:
             raise Exception('Invalid API Key')

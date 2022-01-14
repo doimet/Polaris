@@ -251,7 +251,8 @@ class PluginBase(Request):
         "datetime": "-"
     }
 
-    def __init__(self, target, threshold):
+    def __init__(self, config, target, threshold):
+        self.config = DictObject(config)
         self.target = DictObject(target)
         if self.target.key == 'url':
             res = parse.urlparse(self.target.value)
@@ -270,17 +271,22 @@ class PluginBase(Request):
         self.echo_query = EchoQueryExecute
 
     @property
-    def func_dict(self):
-        method_func = []
+    def __method__(self):
+        method = []
         decorated_func = ''
         for k, v in self.__class__.__dict__.items():
-            if type(v).__name__ == 'function' and k not in ['__init__', 'task']:
-                if v.__name__ == 'inner':
-                    decorated_func = k
-                else:
-                    method_func.append(k)
+            if type(v).__name__ == 'function' and not k.startswith('__') and not k.startswith('custom'):
+                method.append(k)
+        return method
 
-        return {'method': method_func, 'decorate': decorated_func}
+    @property
+    def __decorate__(self):
+        decorate = ''
+        for k, v in self.__class__.__dict__.items():
+            if type(v).__name__ == 'function' and not k.startswith('__') and not k.startswith('custom'):
+                if v.__name__ == 'inner':
+                    decorate = k
+        return decorate
 
 
 class XrayPoc(PluginBase):
@@ -314,19 +320,19 @@ class XrayPoc(PluginBase):
             response = self.request(**options)
 
             def contains(src, value):
-                return True if str(value) in src else False
+                return True if value in src else False
 
             def bcontains(src, value):
-                return True if str(value) in src else False
+                return True if value.decode() in src else False
 
             def icontains(src, value):
                 return True if value in src else False
 
             def bsubmatch(reg, src):
-                return re.search(reg, src)
+                return re.search(reg, src.decode())
 
             def bmatches(reg, src):
-                return True if re.search(reg, src) else False
+                return True if re.search(reg, src.decode()) else False
 
             def md5(value):
                 return hashlib.md5(value.encode()).hexdigest()
@@ -348,16 +354,17 @@ class XrayPoc(PluginBase):
                 return urllib.parse.unquote(value, encoding='utf-8')
 
             def substr(value, start, end):
-                return str(value)[start:end]
+                return value[start:end]
 
             def sleep(value):
                 time.sleep(value)
 
-            def bytes(value):
-                return value.encode()
-
             def string(value):
-                return str(value)
+                if isinstance(value, bytes):
+                    value = value.decode()
+                else:
+                    value = str(value)
+                return value
 
             ast = env.compile(v['expression'])
             prgm = env.program(

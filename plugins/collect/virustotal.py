@@ -13,8 +13,8 @@ class Plugin(Base):
         r = self.request(
             method='get',
             url='https://www.virustotal.com/vtapi/v2/domain/report',
-            params={'apikey': self.target.setting.key, 'domain': self.target.value},
-            headers={'x-apikey': self.target.setting.key}
+            params={'apikey': self.config.virustotal.key, 'domain': self.target.value},
+            headers={'x-apikey': self.config.virustotal.key}
         )
         if r.status_code == 200:
             resp = r.json()

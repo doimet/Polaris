@@ -6,9 +6,7 @@ import threading
 import importlib
 import functools
 from pathlib import Path
-
 import yaml
-
 from core.output import OutputModule
 from core.base import PluginBase, PluginObject, Logging, XrayPoc
 from core.common import get_table_form, merge_ip_segment
@@ -59,8 +57,8 @@ class Application:
             plugin_obj = self.get_plugin_object(os.path.join(file_path, file_name+file_ext))
 
             plugin_info = plugin_obj.__info__
-            func_dict = plugin_obj({}, {}).func_dict
-            support = '/'.join(func_dict.get('method') + ['shell' if func_dict.get('decorate') else ''])
+            inner_method = plugin_obj({}, {}, {}).__method__ #  + ['shell' if func_dict.get('decorate') else ''])
+            support = '/'.join(inner_method)
             status = '\033[0;31m✖ \033[0m' if (
                     file_name in self.config.keys() and self.config[file_name].get('enable', False)
             ) else '\033[0;92m✔ \033[0m'
@@ -214,33 +212,30 @@ class Application:
 
     def job_func(self, plugin_name, target_tuple: tuple, plugin_object):
         """ 任务函数 """
-        options = {}
         thread_object = threading.current_thread()
         self.next_job = thread_object.name = plugin_name
         try:
-            setting = self.config['general']
-            if plugin_name in self.config.keys():
-                if self.config[plugin_name].get('enable', False):
-                    """ 指定插件时 判断插件是否被禁用 并打印提示 """
-                    raise Exception(f'The plug-in is disabled')
-                options = dict(self.config.items(plugin_name))
-            options.update(self.options)
-            # 开始处理传入插件内的参数
-            options['plugin'] = plugin_name
-            # 停止处理传入插件内的参数
+            # if plugin_name in self.config.keys():
+            #     if self.config[plugin_name].get('enable', False):
+            #         """ 指定插件时 判断插件是否被禁用 并打印提示 """
+            #         raise Exception(f'The plug-in is disabled')
+            #     options = self.config[plugin_name]
+            # options.update(self.options)
+            # # 开始处理传入插件内的参数
+            # options['plugin'] = plugin_name
+            # # 停止处理传入插件内的参数
             obj = plugin_object(
+                self.config,
                 {
                     'key': target_tuple[0],
                     'value': target_tuple[1],
-                    'args': options,
-                    'setting': setting
                 },
                 self.threshold
             )
             if self.options.get('shell', False):
                 # 暂停消息线程
                 self.event.clear()
-                call_func_name = obj.func_dict.get('decorate')
+                call_func_name = obj.__decorate__
                 if call_func_name:
                     data = getattr(obj, call_func_name)()
                 else:

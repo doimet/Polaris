@@ -13,7 +13,7 @@ class Plugin(Base):
         r = self.request(
             method='get',
             url='https://api.hunter.io/v2/domain-search',
-            params={'domain': self.target.value, 'api_key': self.target.setting.key}
+            params={'domain': self.target.value, 'api_key': self.config.hunter.key}
         )
         if r.status_code == 200:
             result = [{'email': _['value'], 'type': _['type']} for _ in r.json()['data']['emails']]

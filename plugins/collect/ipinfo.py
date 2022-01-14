@@ -13,7 +13,7 @@ class Plugin(Base):
         r = self.request(
             method='get',
             url=f'http://ipinfo.io/{self.target.value}',
-            params={'token': self.target.setting.key}
+            params={'token': self.config.ipinfo.key}
         )
         if r.status_code == 200:
             response = r.json()

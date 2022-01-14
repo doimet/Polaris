@@ -13,11 +13,13 @@ class Plugin(Base):
         r = self.request(
             method='get',
             url=f"https://api.securitytrails.com/v1/domain/{self.target.value}/subdomains",
-            params={'apikey': self.target.setting.key}
+            params={'apikey': self.config.securitytrails.key}
         )
         if r.status_code in [403, 429]:
             raise Exception('Invalid API Key')
         elif r.status_code == 200:
             return {
-                'SubdomainList': [{'subdomain': _} for _ in map(lambda x: x + '.' + self.target.value, r.json()['subdomains'])]
+                'SubdomainList': [
+                    {'subdomain': _} for _ in map(lambda x: x + '.' + self.target.value, r.json()['subdomains'])
+                ]
             }

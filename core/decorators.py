@@ -38,7 +38,9 @@ class Cli:
                         elif keyword in ['help', '?', 'info']:
                             data = [
                                 {
-                                    '变量': k, '描述': v.get('description', '无'), '赋值': v.get("default", '无')
+                                    'Variable': k,
+                                    'Description': v.get('description', '无'),
+                                    'Default': v.get("default", 'null').replace('{value}', cls.target.value)
                                 } for k, v in kwargs.items() if k
                             ]
                             if data:

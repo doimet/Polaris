@@ -22,7 +22,7 @@ class Plugin(Base):
                 method='post',
                 url='https://www.censys.io/api/v1/search/certificates',
                 json=data,
-                auth=(self.target.setting.api_id, self.target.setting.secret)
+                auth=(self.config.censys.api_id, self.config.censys.secret)
             )
             if r.status_code == 403:
                 raise Exception('Invalid API Key')

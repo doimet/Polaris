@@ -13,7 +13,7 @@ class Plugin(Base):
         r = self.request(
             method='get',
             url='https://subdomains.whoisxmlapi.com/api/v1',
-            params={'apiKey': self.target.setting.key, 'domainName': self.target.value}
+            params={'apiKey': self.config.whoisxmlapi.key, 'domainName': self.target.value}
         )
         if r.status_code == 200:
             data = r.json()

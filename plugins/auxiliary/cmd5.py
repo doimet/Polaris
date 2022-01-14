@@ -13,7 +13,7 @@ class Plugin(Base):
         r = self.request(
             method='get',
             url='https://www.cmd5.com/api.ashx',
-            params={'email': self.target.setting.email, 'key': self.target.setting.key, 'hash': self.target.value}
+            params={'email': self.config.cmd5.email, 'key': self.config.cmd5.key, 'hash': self.target.value}
         )
         if r.status_code == 200:
             response = r.text
