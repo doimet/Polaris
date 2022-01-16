@@ -57,7 +57,7 @@ class Application:
             plugin_obj = self.get_plugin_object(os.path.join(file_path, file_name+file_ext))
 
             plugin_info = plugin_obj.__info__
-            inner_method = plugin_obj({}, {}, {}).__method__ #  + ['shell' if func_dict.get('decorate') else ''])
+            inner_method = plugin_obj({}, {}, {}, {}).__method__ #  + ['shell' if func_dict.get('decorate') else ''])
             support = '/'.join(inner_method)
             status = '\033[0;31m✖ \033[0m' if (
                     file_name in self.config.keys() and self.config[file_name].get('enable', False)
@@ -206,7 +206,7 @@ class Application:
                 for k, v in data.items():
                     self.echo_handle(name=name, data=v, key=k)
             else:
-                self.log.child(f'{key}: {len(data.keys())} ({name})')
+                self.log.child(f'{key}: 1 ({name})')
                 table = get_table_form(data, layout='vertical')
                 self.log.child(str(table).replace('\n', '\n\033[0;34m | \033[0m '))
 
@@ -222,9 +222,11 @@ class Application:
             #     options = self.config[plugin_name]
             # options.update(self.options)
             # # 开始处理传入插件内的参数
-            # options['plugin'] = plugin_name
+            options = self.options
+            options['plugin'] = plugin_name
             # # 停止处理传入插件内的参数
             obj = plugin_object(
+                options,
                 self.config,
                 {
                     'key': target_tuple[0],
@@ -244,9 +246,9 @@ class Application:
                 self.event.set()
             else:
                 """ 屏蔽插件内输出 """
-                # sys.stdout = open(os.devnull, 'w')
+                sys.stdout = open(os.devnull, 'w')
                 data = getattr(obj, target_tuple[0])()
-                # sys.stdout = sys.__stdout__
+                sys.stdout = sys.__stdout__
             return data
         except Exception as e:
             self.log.warn(f'{str(e)} (plugin:{plugin_name})')
@@ -318,8 +320,7 @@ class Application:
         1.将utils中的函数转化为插件基类的方法
         2.将decorators中的装饰器方法注册进插件基类
         """
-        module_path = "core.utils"
-        module_object = importlib.import_module(module_path)
+        module_object = importlib.import_module("core.utils")
 
         for method_name in dir(module_object):
             if method_name[0] != '_':
@@ -327,8 +328,7 @@ class Application:
                 if type(class_attr_obj).__name__ == 'function':
                     setattr(PluginBase, method_name, staticmethod(class_attr_obj))
 
-        module_path = "core.decorators"
-        module_object = importlib.import_module(module_path)
+        module_object = importlib.import_module("core.decorators")
 
         reg_dict = {'Base': PluginBase}
         for method_name in dir(module_object):

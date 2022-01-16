@@ -11,10 +11,11 @@ class Plugin(Base):
         "datetime": "2022-01-01"
     }
 
-    @cli.options('file_path', desc="指定子域名字典", default=os.path.join('data', 'subdomain.dict'))
-    def domain(self, file_path):
-        with self.async_pool(max_workers=self.config.general.asyncio, threshold=self.threshold) as execute:
-            with open(file_path, encoding='utf-8') as f:
+    @cli.options('path', desc="指定子域名字典", default=os.path.join('data', 'subdomain.dict'))
+    @cli.options('workers', desc="协程并发数量", type=int, default=50)
+    def domain(self, path, workers):
+        with self.async_pool(max_workers=workers, threshold=self.threshold) as execute:
+            with open(path, encoding='utf-8') as f:
                 for prefix in f:
                     if prefix:
                         execute.submit(self.custom_task, f'{prefix.strip()}.{self.target.value}')

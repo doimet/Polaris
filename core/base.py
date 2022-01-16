@@ -28,13 +28,17 @@ if sys.platform == 'win32':
 class Logging(logging.Logger):
     """ 日志基类 """
 
-    def __init__(self, level=logging.INFO):
+    def __init__(self, level=logging.INFO, mode=0):
         super(Logging, self).__init__(name='error', level=level)
         # self.__setFileHandler__()
         self.__setStreamHandler__()
+        self.is_shell_mode = mode # 1表示交互模式, 0非交互模式
 
     def set_level(self, level):
         self.setLevel(level)
+
+    def set_mode(self, mode):
+        self.is_shell_mode = mode
 
     def __setFileHandler__(self, level=30):
         filename = os.path.join('logs', '{}.log'.format(self.name))
@@ -58,42 +62,45 @@ class Logging(logging.Logger):
         """ 调试输出 """
 
         if self.isEnabledFor(10):
+            msg = str(msg)
             sys.stdout.write('\r' + 100 * ' ' + '\r')
-            self._log(10, "\r\033[0;34m | \033[0m {}".format(str(msg) + (100 - len(msg)) * ' '), args, **kwargs)
+            shape = '[*]' if self.is_shell_mode else ' | '
+            self._log(10, "\r\033[0;34m{}\033[0m {}".format(shape, msg + (100 - len(msg)) * ' '), args, **kwargs)
 
     def info(self, msg, *args, **kwargs):
         """ 消息输出 """
 
         if self.isEnabledFor(20):
+            msg = str(msg)
             sys.stdout.write('\r' + 100 * ' ' + '\r')
-            self._log(20, "\r\033[0;34m | \033[0m {}".format(str(msg) + (100 - len(msg)) * ' '), args, **kwargs)
+            shape = '[i]' if self.is_shell_mode else ' | '
+            self._log(20, "\r\033[0;34m{}\033[0m {}".format(shape, msg + (100 - len(msg)) * ' '), args, **kwargs)
 
     def warn(self, msg, *args, **kwargs):
         """ 异常输出 """
 
         if self.isEnabledFor(30):
+            msg = str(msg)
             sys.stdout.write('\r' + 100 * ' ' + '\r')
-            self._log(
-                30,
-                "\r\033[0;34m | \033[0m\033[0;33m {} \033[0m".format(str(msg) + (100 - len(msg)) * ' '), args, **kwargs
-            )
+            shape = '[!]' if self.is_shell_mode else ' | '
+            self._log(30, "\r\033[0;33m{}\033[0m {}".format(shape, msg + (100 - len(msg)) * ' '), args, **kwargs)
 
     def error(self, msg, *args, **kwargs):
         """ 错误输出 """
 
         if self.isEnabledFor(40):
+            msg = str(msg)
             sys.stdout.write('\r' + 100 * ' ' + '\r')
-            self._log(
-                40,
-                "\r\033[0;34m | \033[0m\033[0;31m {} \033[0m".format(str(msg) + (100 - len(msg)) * ' '), args, **kwargs
-            )
+            shape = '[-]' if self.is_shell_mode else ' | '
+            self._log(40, "\r\033[0;31m{}\033[0m {}".format(shape, msg + (100 - len(msg)) * ' '), args, **kwargs)
 
     def child(self, msg, *args, **kwargs):
         """ 消息输出 """
 
         if self.isEnabledFor(50):
+            msg = str(msg)
             sys.stdout.write('\r' + 100 * ' ' + '\r')
-            self._log(50, "\r\033[0;34m | \033[0m {}".format(str(msg) + (100 - len(msg)) * ' '), args, **kwargs)
+            self._log(50, "\r\033[0;34m | \033[0m {}".format(msg + (100 - len(msg)) * ' '), args, **kwargs)
 
     def root(self, msg, *args, **kwargs):
         """ 消息输出 """
@@ -251,9 +258,10 @@ class PluginBase(Request):
         "datetime": "-"
     }
 
-    def __init__(self, config, target, threshold):
+    def __init__(self, options, config, target, threshold):
         self.config = DictObject(config)
         self.target = DictObject(target)
+        self.options = DictObject(options)
         if self.target.key == 'url':
             res = parse.urlparse(self.target.value)
             self.target.update(
@@ -266,7 +274,7 @@ class PluginBase(Request):
             )
         Request.__init__(self, self.target)
         self.threshold = threshold
-        self.log = Logging(level=target.get('args', {}).get('verbose', 20))
+        self.log = Logging(level=target.get('args', {}).get('verbose', 20), mode=self.options.shell)
         self.async_pool = AsyncioExecute
         self.echo_query = EchoQueryExecute
 
