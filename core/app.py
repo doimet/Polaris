@@ -232,6 +232,7 @@ class Application:
                     'key': target_tuple[0],
                     'value': target_tuple[1],
                 },
+                self.event,
                 self.threshold
             )
             if self.options.get('shell', False):
@@ -245,10 +246,7 @@ class Application:
                 # 恢复消息线程
                 self.event.set()
             else:
-                """ 屏蔽插件内输出 """
-                sys.stdout = open(os.devnull, 'w')
                 data = getattr(obj, target_tuple[0])()
-                sys.stdout = sys.__stdout__
             return data
         except Exception as e:
             self.log.warn(f'{str(e)} (plugin:{plugin_name})')

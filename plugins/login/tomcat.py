@@ -15,12 +15,12 @@ class Plugin(Base):
     @cli.options('ip', desc="需要攻击的目标", default='{self.target.value}')
     @cli.options('port', desc="需要攻击的端口", type=int, default=8080)
     @cli.options('method', desc="口令爆破的模式 1:单点模式 2:交叉模式", type=int, default=2)
-    @cli.options('username', desc="用户账号或字典文件", default=os.path.join('data', 'tomcat_username.dict'))
+    @cli.options('username', desc="用户名称或字典文件", default=os.path.join('data', 'tomcat_username.dict'))
     @cli.options('password', desc="用户密码或字典文件", default=os.path.join('data', 'tomcat_password.dict'))
     @cli.options('timeout', desc="连接超时时间", type=int, default=5)
     @cli.options('workers', desc="协程并发数量", type=int, default=50)
     def ip(self, ip, port, method, username, password, timeout, workers) -> dict:
-        with self.async_pool(max_workers=workers, threshold=self.threshold) as execute:
+        with self.async_pool(max_workers=workers) as execute:
             for u, p in self.build_login_dict(
                     method=method,
                     username=username,

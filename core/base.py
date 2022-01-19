@@ -197,14 +197,15 @@ class EchoQueryExecute:
 class AsyncioExecute(object):
     """ 异步执行器 """
 
-    def __init__(self, max_workers=150, threshold=None):
-        if int(max_workers) <= 0:
-            raise ValueError("max_workers must be greater than 0, default 150")
+    def __init__(self, max_workers=50):
+        if not isinstance(max_workers, int):
+            raise Exception('TypeError: max_workers must be int')
+        elif max_workers <= 0:
+            raise ValueError("max_workers must be greater than 0, default 50")
         self._all_task = []
-        self._threshold = threshold
         self._new_loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self._new_loop)
-        self._lock = asyncio.Semaphore(int(max_workers))
+        self._lock = asyncio.Semaphore(max_workers)
         self.loop = asyncio.get_event_loop()
 
     def __enter__(self):
@@ -228,20 +229,20 @@ class AsyncioExecute(object):
                 pass
 
     def on_finish(self, future):
-        if self._threshold:
+        if self.threshold:
             info = future.get_name()
             match = re.search("'name':\s+'([\w().-]+)'", info)
             if match:
                 name = match.group(1)
             else:
                 name = info
-            self._threshold['name'] = str(name)[:25]
-            self._threshold['count'] += 1
-            self._threshold['status'] = (0, 1)[future.result() is not None]
+            self.threshold['name'] = str(name)[:25]
+            self.threshold['count'] += 1
+            self.threshold['status'] = (0, 1)[future.result() is not None]
 
     def result(self):
-        if self._threshold:
-            self._threshold['total'] += len(self._all_task)
+        if self.threshold:
+            self.threshold['total'] += len(self._all_task)
         res = self.loop.run_until_complete(asyncio.gather(*self._all_task, loop=self.loop, return_exceptions=False))
         res = [_ for _ in res if _ is not None]
         return res[0] if len(res) == 1 else res
@@ -258,7 +259,7 @@ class PluginBase(Request):
         "datetime": "-"
     }
 
-    def __init__(self, options, config, target, threshold):
+    def __init__(self, options, config, target, event, threshold):
         self.config = DictObject(config)
         self.target = DictObject(target)
         self.options = DictObject(options)
@@ -273,9 +274,11 @@ class PluginBase(Request):
                 }
             )
         Request.__init__(self, self.target)
+        self.event = event
         self.threshold = threshold
         self.log = Logging(level=target.get('args', {}).get('verbose', 20), mode=self.options.shell)
         self.async_pool = AsyncioExecute
+        setattr(self.async_pool, 'threshold', threshold)
         self.echo_query = EchoQueryExecute
 
     @property

@@ -34,7 +34,7 @@ def show_banner(func):
     def wrapper(options, processors):
         os.system('')
         print(f"""
-    \033[0;31mPolaris - 渗透测试框架 1.1.6\033[0m
+    \033[0;31mPolaris - 渗透测试框架 1.1.7\033[0m
 
  =# Author: 浮鱼
  =# Github: https://github.com/doimet/Polaris
@@ -175,7 +175,7 @@ def login(**kwargs):
     return merge_options(kwargs)
 
 
-@cli.command(name='auxiliary')
+@cli.command(name='tools')
 @click.option('--plugin', '-p', help='指定漏洞利用的插件.', multiple=True)
 @click.option('--shell', '-S', help='开启插件的终端模式.', is_flag=True)
 @click.option('--list', '-L', help='列出插件的详细信息.', is_flag=True)

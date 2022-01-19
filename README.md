@@ -68,11 +68,13 @@
 
 + 收集子域名
     ```shell script
-    python Cli.py --input domain:360.com collect
-    python Cli.py --input domain:360.com collect --plugin china
-    python Cli.py --input domain:360.com collect --plugin china --plugin ip138
-    python Cli.py --input domain:360.com collect --plugin !ksubdomain
+    python Cli.py --input domain:example.com collect
+    python Cli.py --input domain:example.com collect --plugin china
+    python Cli.py --input domain:example.com collect --plugin china --plugin ip138
+    python Cli.py --input domain:example.com collect --plugin !ksubdomain
+    python Cli.py --input domain:example.com collect --plugin ksubdomain --shell
     ```
+    ![Image](docs/images/screenshort_08.png)
 + 收集ip信息
     ```shell script
     python Cli.py --input ip:x.x.x.x collect
@@ -100,11 +102,11 @@ python Cli.py --input ip:x.x.x.x login --plugin ssh --shell
 ### 渗透辅助
 + MD5解密
 ```shell script
-python Cli.py --input md5:1a79a4d60de6718e8e5b326e338ae533 auxiliary --plugin md5
+python Cli.py --input md5:1a79a4d60de6718e8e5b326e338ae533 tools --plugin md5
 ```
 + 识别杀软
 ```shell script
-python Cli.py --input file:tasklist.txt auxiliary --plugin whatav
+python Cli.py --input file:tasklist.txt tools --plugin whatav
 ```
 
 ### 命令联动

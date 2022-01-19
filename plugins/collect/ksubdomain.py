@@ -11,14 +11,15 @@ class Plugin(Base):
         "datetime": "2022-01-01"
     }
 
+    @cli.options('domain', desc="需要攻击的目标", default='{self.target.value}')
     @cli.options('path', desc="指定子域名字典", default=os.path.join('data', 'subdomain.dict'))
     @cli.options('workers', desc="协程并发数量", type=int, default=50)
-    def domain(self, path, workers):
-        with self.async_pool(max_workers=workers, threshold=self.threshold) as execute:
+    def domain(self, domain, path, workers):
+        with self.async_pool(max_workers=workers) as execute:
             with open(path, encoding='utf-8') as f:
-                for prefix in f:
-                    if prefix:
-                        execute.submit(self.custom_task, f'{prefix.strip()}.{self.target.value}')
+                for line in f:
+                    prefix = line.strip()
+                    execute.submit(self.custom_task, f'{prefix}.{domain}') if prefix else None
             return {'SubdomainList': execute.result()}
 
     async def custom_task(self, subdomain):

@@ -38,6 +38,7 @@ class Cli:
 
     @staticmethod
     def kwargs_handle(cls, value):
+        """ 输入参数处理 """
         kwargs = {}
         for k, v in value.items():
             default = v['default']
@@ -81,6 +82,9 @@ class Cli:
                                 cls.log.echo(tb)
                                 cls.log.echo('\nGrammar: set {variable} {value}\n')
                         elif keyword in ['exploit', 'run']:
+                            # 恢复消息线程
+                            cls.event.set()
+
                             args = tuple([_.get('default') for _ in kwargs.values()])
                             try:
                                 if all([True if _ else False for _ in args]):
@@ -90,6 +94,9 @@ class Cli:
                                 self.echo_handle(cls.log, name=cls.options.plugin, data=res)
                             except Exception as e:
                                 cls.log.warn(e)
+
+                            # 暂停消息线程
+                            cls.event.clear()
                         else:
                             match = re.match(r'set ([\w-]+)[ :=]?(.*)', keyword)
                             if match:
