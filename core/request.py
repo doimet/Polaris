@@ -65,7 +65,7 @@ class Request:
         }
         self.client = httpx.Client(verify=False)
         self.async_client = httpx.AsyncClient(verify=False)
-        DNSProxy([self.resolve_name], self.resolve_host)
+        # DNSProxy([self.resolve_name], self.resolve_host)
 
     def __del__(self):
         self.client.close()
@@ -102,7 +102,7 @@ class Request:
         except httpx.ConnectError as connect_error:
             response = self.client.request(method=method, url=url.replace('http://', 'https://'), *args, **kwargs)
         except Exception as e:
-            return Exception({"Error": e})
+            raise Exception({"Error": e})
         self.url_cache[url] = response
         return self.decorate_response(response)
 
@@ -119,7 +119,7 @@ class Request:
             response = await self.async_client.request(method=method, url=url.replace('http://', 'https://'), *args,
                                                        **kwargs)
         except Exception as e:
-            return Exception({"Error": e})
+            raise Exception({"Error": e})
         self.url_cache[url] = response
         return self.decorate_response(response)
 
