@@ -100,24 +100,34 @@ class Request:
         try:
             response = self.client.request(method=method, url=url, *args, **kwargs)
         except httpx.ConnectError as connect_error:
-            response = self.client.request(method=method, url=url.replace('http://', 'https://'), *args, **kwargs)
+            response = self.client.request(
+                method=method,
+                url=url.replace('http://', 'https://'),
+                *args,
+                **kwargs
+            )
         except Exception as e:
             raise Exception({"Error": e})
         self.url_cache[url] = response
         return self.decorate_response(response)
 
-    async def async_http(self, method='get', url='', *args, **kwargs):
+    async def async_http(self, method='get', url=None, path=None, *args, **kwargs):
+        if not url and path and self.target:
+            url = urljoin(self.target.value, path)
         if url in self.url_cache:
             return self.url_cache[url]
         self.current_url = url
-
         self.headers.update(kwargs.get('headers', {}))
         kwargs.update({'headers': self.headers})
         try:
             response = await self.async_client.request(method=method, url=url, *args, **kwargs)
         except httpx.ConnectError as connect_error:
-            response = await self.async_client.request(method=method, url=url.replace('http://', 'https://'), *args,
-                                                       **kwargs)
+            response = await self.async_client.request(
+                method=method,
+                url=url.replace('http://', 'https://'),
+                *args,
+                **kwargs
+            )
         except Exception as e:
             raise Exception({"Error": e})
         self.url_cache[url] = response

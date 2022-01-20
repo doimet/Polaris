@@ -264,7 +264,7 @@ class PluginBase(Request):
         self.target = DictObject(target)
         self.options = DictObject(options)
         if self.target.key == 'url':
-            res = parse.urlparse(self.target.value)
+            res = urllib.parse.urlparse(self.target.value)
             self.target.update(
                 {
                     'url': {

@@ -97,7 +97,9 @@ class Application:
 
     def save(self):
         """ 输出处理 """
-
+        dirs, filename = os.path.split(self.options['output'])
+        if not os.path.exists(dirs):
+            os.makedirs(dirs)
         file_name, file_ext = os.path.splitext(self.options['output'])
         output_object = OutputModule(self.options['output'], self.dataset)
         callback = functools.partial(self.log.critical, 'export file format not support')
