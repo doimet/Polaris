@@ -4,7 +4,6 @@ import json
 import base64 as b64
 import random
 import string
-import uuid
 
 
 def build_random_str(length=8):

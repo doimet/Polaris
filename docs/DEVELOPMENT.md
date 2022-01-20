@@ -9,14 +9,32 @@
   + `log.info`: 用于输出普通信息
   + `log.warn`: 用于输出警告信息
   + `log.error`: 用于输出错误信息
-+ `async_pool`: 用于创建异步连接池
-+ `echo_query`: 针对命令无回显时调用
-
++ `async_pool`: 用于创建异步连接池(上下文管理)
+  ```
+  async_pool(max_workers: int) -> Object
+  传入并发数量
+  返回执行对象
+  ```
++ `echo_query`: 针对命令无回显时调用(上下文管理)
+  ```
+  echo_query() -> Object
+  返回查询对象
+  ```
+  
 ## 内置方法
 
-+ `request`: 同requests
-+ `async_http`:异步时调用
-
++ `request`: 网络请求方法
+  ```
+  request(method: str, url: str, path: str, **kwargs) -> Response
+  传入请求参数
+  返回响应对象
+  ```
++ `async_http`:异步网络请求方法
+  ```
+  await self.async_http(method: str, url: str, path: str, **kwargs) -> Response
+  传入请求参数
+  返回响应对象
+  ```
 + `build_random_int`: 生成随机整数
   ```
   build_random_int(length: int) -> int
@@ -128,7 +146,7 @@ class Plugin(Base):
     @cli.options('timeout', desc="连接超时时间", type=int, default=5)
     @cli.options('workers', desc="协程并发数量", type=int, default=50)
     def ip(self, ip, port, method, username, password, timeout, workers) -> dict:
-        with self.async_pool(max_workers=workers, threshold=self.threshold) as execute:
+        with self.async_pool(max_workers=workers) as execute:
             for u, p in self.build_login_dict(method=method, username=username, password=password):
                 execute.submit(self.custom_task, ip, port, u, p, timeout)
             return {'LoginInfo': execute.result()}
@@ -138,7 +156,7 @@ class Plugin(Base):
         ...
 ```
 ### 渗透辅助插件模板
-```shell script
+```python
 # -*-* coding:UTF-8
 
 
@@ -157,6 +175,5 @@ class Plugin(Base):
 
 ## 注意事项
 1. 为了方便对插件返回数据进行处理, 插件的返回数据类型需统一为`dict`(shell方法返回值类型需是`str`)
-2. 除非调用内置打印输出方法, 任何写在插件内部的打印输出方法都不会被执行
-3. 插件内定义的方法名称并非固定的, 而是根据这个插件所接受的输入类型来以此命名的
-4. 一个插件类限定只允许使用一个类方法装饰器
+2. 插件内定义的方法名称并非固定的, 而是根据这个插件所接受的输入类型来以此命名的
+3. 一个插件类限定只允许使用一个类方法装饰器
