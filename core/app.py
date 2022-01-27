@@ -57,7 +57,7 @@ class Application:
             plugin_obj = self.get_plugin_object(os.path.join(file_path, file_name+file_ext))
 
             plugin_info = plugin_obj.__info__
-            inner_method = plugin_obj({}, {}, {}, {}).__method__ #  + ['shell' if func_dict.get('decorate') else ''])
+            inner_method = plugin_obj({}, {}, {}, None, {}).__method__ #  + ['shell' if func_dict.get('decorate') else ''])
             support = '/'.join(inner_method)
             status = '\033[0;31m✖ \033[0m' if (
                     file_name in self.config.keys() and self.config[file_name].get('enable', False)

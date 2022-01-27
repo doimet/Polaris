@@ -6,6 +6,7 @@ class Cli:
     def __init__(self):
         self.t_depth = 0
         self.c_depth = 0
+        self.dataset = None
 
     def command(self):
         self.t_depth += 1
@@ -44,8 +45,8 @@ class Cli:
             default = v['default']
             if isinstance(default, str) and default.startswith('{') and default.endswith('}'):
                 try:
-                    v['default'] = eval(default[1:-1].replace('self', 'cls'))
-                except:
+                    v['default'] = eval(default[1:-1].replace('self', 'cls')) or '-'
+                except Exception as e:
                     pass
             kwargs[k] = v
         return kwargs
@@ -91,6 +92,7 @@ class Cli:
                                     res = func(cls, *args)
                                 else:
                                     res = func(cls)
+                                self.dataset = res
                                 self.echo_handle(cls.log, name=cls.options.plugin, data=res)
                             except Exception as e:
                                 cls.log.warn(e)
@@ -111,6 +113,7 @@ class Cli:
                                     cls.log.error("variable unavailable")
                             else:
                                 cls.log.error("syntax error")
+                    return self.dataset
                 else:
                     return func(cls, **kwargs)
 

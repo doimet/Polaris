@@ -52,3 +52,6 @@ link = "https://subdomains.whoisxmlapi.com"
 [securitytrails]
 key = ""
 link = "https://securitytrails.com"
+
+[aiqicha]
+cookie = ''

@@ -1,6 +1,4 @@
 # -*-* coding:UTF-8
-import re
-import sys
 import prettytable
 from itertools import chain
 from core.base import Interval
@@ -59,7 +57,7 @@ def keep_data_format(data):
                                 copy_data.update(i)
                         result.append(copy_data)
                     """ 数据去重 """
-                    result = [dict(t) for t in set([tuple(d.items()) for d in result])]
+                    # result = [dict(t) for t in set([tuple(d.items()) for d in result])]
                     data[key] = result
                 else:
                     data[key] = value

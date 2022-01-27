@@ -11,8 +11,8 @@ class Plugin(Base):
         "datetime": "2022-01-01"
     }
 
-    @cli.options('domain', desc="需要攻击的目标", default='{self.target.value}')
-    @cli.options('path', desc="指定子域名字典", default=os.path.join('data', 'subdomain.dict'))
+    @cli.options('domain', desc="设置输入目标", default='{self.target.value}')
+    @cli.options('path', desc="子域名字典路径", default=os.path.join('data', 'subdomain.dict'))
     @cli.options('workers', desc="协程并发数量", type=int, default=50)
     def domain(self, domain, path, workers):
         with self.async_pool(max_workers=workers) as execute:
