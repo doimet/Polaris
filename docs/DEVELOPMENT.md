@@ -125,7 +125,7 @@ class Plugin(Base):
         ...
     
     @cli.options('cmd', desc="执行命令", default="whoami")
-    def attack(self) -> dict:
+    def attack(self, cmd) -> dict:
         """ 利用代码 """
         ...
 
