@@ -7,7 +7,6 @@ import importlib
 import functools
 from pathlib import Path
 import yaml
-from core.output import OutputModule
 from core.base import PluginBase, PluginObject, Logging, XrayPoc
 from core.common import get_table_form, merge_ip_segment
 from core.common import merge_same_data, keep_data_format
@@ -101,9 +100,13 @@ class Application:
         if not os.path.exists(dirs):
             os.makedirs(dirs)
         file_name, file_ext = os.path.splitext(self.options['output'])
-        output_object = OutputModule(self.options['output'], self.dataset)
-        callback = functools.partial(self.log.critical, 'export file format not support')
-        getattr(output_object, 'export_' + file_ext[1:], callback)()
+        output_object = importlib.import_module("core.output")
+
+        def callback_failure(path, data):
+            self.log.warn('export file format not support, auto change json format')
+            getattr(output_object, 'export_json')(path.replace(file_ext, '.json'), data)
+
+        getattr(output_object, 'export_' + file_ext[1:], callback_failure)(self.options['output'], self.dataset)
 
     def job_execute(self, target_tuple: tuple):
         """ 任务执行器 """
@@ -259,7 +262,9 @@ class Application:
             thread = threading.current_thread()
             self.last_job = thread.name
             data = merge_same_data(worker.result(), 1, {})
-            self.echo_handle(name=thread.name, data=data)
+            # 如进入控制台模式则需跳过此逻辑
+            if not self.options['console']:
+                self.echo_handle(name=thread.name, data=data)
 
     def on_monitor(self):
         """ 消息线程 """

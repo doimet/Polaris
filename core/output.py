@@ -1,32 +1,43 @@
 # -*-* coding:UTF-8
 import json
 import csv
-import xlwt
 
 
-class OutputModule:
+def export_json(path, data):
+    """ 输出json文件 """
+    with open(path, "w", encoding='utf-8') as f:
+        json.dump(data, f, indent=4, ensure_ascii=False)
 
-    def __init__(self, export_path, source_data):
-        self.export_path = export_path
-        self.source_data = source_data
 
-    def export_json(self):
-        """ 生成json文件 """
-        with open(self.export_path, "w", encoding='utf-8') as f:
-            json.dump(self.source_data, f, indent=4, ensure_ascii=False)
+def export_csv(path, data):
+    """ 输出csv文件 """
+    with open(path, 'w', newline='', encoding="utf-8-sig") as f:
+        writer = csv.writer(f)
+        for source in data:
 
-    def export_md(self):
-        """ 生成md文件 """
-        ...
+            writer.writerow(['目标: ' + source['root']])
 
-    def export_txt(self):
-        """ 生成txt文件 """
-        ...
+            for k, v in source['content'].items():
+                if not v:
+                    continue
+                writer.writerow([k])
+                if isinstance(v, list):
+                    one = v[0]
+                    if isinstance(one, dict):
+                        field_names = list(one.keys())
+                        writer1 = csv.DictWriter(f, fieldnames=field_names)
+                        writer1.writeheader()
+                        for row in v:
+                            writer1.writerow(row)
 
-    def export_csv(self):
-        """ 生成csv文件 """
-        with open(self.export_path, newline='', encoding="utf-8-sig") as f:
-            writer = csv.writer(f)
-            # writer.writerow(columns)
-            # for num, key in enumerate(data["results"]):
-            #     writer.writerow([str(num + 1), key[0], key[1], key[2], key[3], key[4], key[5], key[6]])
+                    elif isinstance(one, str):
+                        for row in v:
+                            writer.writerow([row])
+                    elif isinstance(one, list):
+                        raise Exception('List nested list data')
+                elif isinstance(v, dict):
+                    field_names = list(v.keys())
+                    writer1 = csv.DictWriter(f, fieldnames=field_names)
+                    writer1.writeheader()
+                    writer1.writerow(v)
+                    writer1.writerow({})

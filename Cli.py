@@ -34,7 +34,7 @@ def show_banner(func):
     def wrapper(options, processors):
         os.system('')
         print(f"""
-    \033[0;31mPolaris - 渗透测试框架 1.1.10\033[0m
+    \033[0;31mPolaris - 渗透测试框架 1.1.11\033[0m
 
  =# Author: 浮鱼
  =# Github: https://github.com/doimet/Polaris
@@ -186,4 +186,7 @@ def auxiliary(**kwargs):
 
 
 if __name__ == '__main__':
-    cli()
+    try:
+        cli()
+    except Exception as e:
+        print(f'\r\033[0;31m[-]\033[0m {e}')
