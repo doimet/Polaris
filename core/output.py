@@ -1,5 +1,7 @@
 # -*-* coding:UTF-8
 import json
+import csv
+import xlwt
 
 
 class OutputModule:
@@ -16,3 +18,15 @@ class OutputModule:
     def export_md(self):
         """ 生成md文件 """
         ...
+
+    def export_txt(self):
+        """ 生成txt文件 """
+        ...
+
+    def export_csv(self):
+        """ 生成csv文件 """
+        with open(self.export_path, newline='', encoding="utf-8-sig") as f:
+            writer = csv.writer(f)
+            # writer.writerow(columns)
+            # for num, key in enumerate(data["results"]):
+            #     writer.writerow([str(num + 1), key[0], key[1], key[2], key[3], key[4], key[5], key[6]])

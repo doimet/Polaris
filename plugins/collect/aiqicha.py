@@ -1,39 +1,50 @@
 # -*-* coding:UTF-8
+import json
 import re
+import urllib.parse
 
 
 class Plugin(Base):
     __info__ = {
         "author": "doimet",
         "references": ["https://aiqicha.baidu.com"],
-        "description": "通过爱企查查询公司信息",
+        "description": "爱企查企业信息查询",
         "datetime": "2022-01-26"
     }
 
     @cli.options('company', desc="设置输入目标", default='{self.target.value}')
+    @cli.options('ua', desc="设置User-Agent", default='{self.config.aiqicha.ua}')
     @cli.options('cookies', desc="认证cookie", default='{self.config.aiqicha.cookie}')
-    @cli.options('workers', desc="协程并发数量", type=int, default=50)
-    def company(self, company, cookies, workers) -> dict:
+    @cli.options('workers', desc="协程并发数量", type=int, default='{self.config.general.asyncio}')
+    def company(self, company, ua, cookies, workers) -> dict:
+        if not cookies or not ua:
+            raise Exception('missing cookies or ua parameter')
         self.log.debug(f'start collect company base info')
+        url = f'https://aiqicha.baidu.com/s?q={urllib.parse.quote(company)}&t=0'
         r = self.request(
             method='get',
-            url=f'https://aiqicha.baidu.com/s?q={company}&t=0',
+            url=url,
             headers={
-                'Cookie': cookies
+                'Cookie': cookies,
+                'Referer': url,
+                'User-Agent': ua,
             }
         )
-        match = re.findall(r'\[{"pid":"(\d+)",', r.text)
+
+        match = re.search(r'"resultList":(.*?),"totalNumFound', r.text)
         if match:
-            pid = match[0]
-            with self.async_pool(max_workers=workers) as execute:
-                execute.submit(self.custom_collect_base_info, pid)
-                execute.submit(self.custom_collect_app_info, pid)
-                execute.submit(self.custom_collect_holds_info, pid)
-                execute.submit(self.custom_collect_branch_info, pid)
-                execute.submit(self.custom_collect_invest_info, pid)
-                execute.submit(self.custom_collect_icp_info, pid)
-                company_info = {k: v for one in execute.result() for k, v in one.items()}
-                return {'CompanyInfo': company_info}
+            data = json.loads(match.group(1))
+            if data:
+                pid = data[0]['pid']
+                with self.async_pool(max_workers=workers) as execute:
+                    execute.submit(self.custom_collect_base_info, pid)
+                    execute.submit(self.custom_collect_app_info, pid)
+                    execute.submit(self.custom_collect_holds_info, pid)
+                    execute.submit(self.custom_collect_branch_info, pid)
+                    execute.submit(self.custom_collect_invest_info, pid)
+                    execute.submit(self.custom_collect_icp_info, pid)
+                    company_info = {k: v for one in execute.result() for k, v in one.items()}
+                    return {'CompanyInfo': company_info}
 
     async def custom_collect_base_info(self, pid):
         r = await self.async_http(
@@ -61,8 +72,6 @@ class Plugin(Base):
         self.log.debug(f'start collect company holds info')
         page, holds_info, page_total = 1, [], 0
         while True:
-            if page == page_total:
-                break
             r = await self.async_http(
                 method='get',
                 url=f'https://aiqicha.baidu.com/detail/holdsajax?p=1&size=100&pid={pid}',
@@ -73,12 +82,13 @@ class Plugin(Base):
             if r.status_code == 200:
                 resp = r.json()
                 page_total = resp['data']['pageCount']
-                if page_total < page or page != resp['data']['page']:
+                if page != resp['data']['page']:
                     break
-                else:
-                    page += 1
                 for i in resp['data']['list']:
                     holds_info.append({"company": i['entName'], "proportion": i['proportion']})
+                if page == page_total:
+                    break
+                page += 1
             else:
                 break
         return {"holds_info": holds_info}
@@ -87,8 +97,6 @@ class Plugin(Base):
         self.log.debug(f'start collect company branch info')
         page, branch_info, page_total = 1, [], 0
         while True:
-            if page == page_total:
-                break
             r = await self.async_http(
                 method='get',
                 url=f'https://aiqicha.baidu.com/detail/branchajax?p=1&size=100&pid={pid}',
@@ -99,12 +107,13 @@ class Plugin(Base):
             if r.status_code == 200:
                 resp = r.json()
                 page_total = resp['data']['pageCount']
-                if page_total < page or page != resp['data']['page']:
+                if page != resp['data']['page']:
                     break
-                else:
-                    page += 1
                 for i in resp['data']['list']:
                     branch_info.append({"company": i['entName']})
+                if page == page_total:
+                    break
+                page += 1
             else:
                 break
         return {"branch_info": branch_info}
@@ -113,8 +122,6 @@ class Plugin(Base):
         self.log.debug(f'start collect company invest info')
         page, invest_info, page_total = 1, [], 0
         while True:
-            if page == page_total:
-                break
             r = await self.async_http(
                 method='get',
                 url=f'https://aiqicha.baidu.com/detail/investajax?p=1&size=100&pid={pid}',
@@ -125,12 +132,13 @@ class Plugin(Base):
             if r.status_code == 200:
                 resp = r.json()
                 page_total = resp['data']['pageCount']
-                if page_total < page or page != resp['data']['page']:
+                if page != resp['data']['page']:
                     break
-                else:
-                    page += 1
                 for i in resp['data']['list']:
                     invest_info.append({"company": i['entName'], 'proportion': i['regRate']})
+                if page == page_total:
+                    break
+                page += 1
             else:
                 break
         return {"invest_info": invest_info}
@@ -139,8 +147,6 @@ class Plugin(Base):
         self.log.debug(f'start collect company app info')
         page, app_info, page_total = 1, [], 0
         while True:
-            if page == page_total:
-                break
             r = await self.async_http(
                 method='get',
                 url=f'https://aiqicha.baidu.com/c/appinfoAjax?p={page}&size=100&pid={pid}',
@@ -151,12 +157,13 @@ class Plugin(Base):
             if r.status_code == 200:
                 resp = r.json()
                 page_total = resp['data']['pageCount']
-                if page_total < page or page != resp['data']['page']:
+                if page != resp['data']['page']:
                     break
-                else:
-                    page += 1
                 for i in resp['data']['list']:
                     app_info.append({"name": i['name'], 'classify': i['classify'], 'description': i['logoBrief']})
+                if page == page_total:
+                    break
+                page += 1
             else:
                 break
         return {"app_info": app_info}
@@ -165,8 +172,6 @@ class Plugin(Base):
         self.log.debug(f'start collect company icp info')
         page, icp_info, page_total = 1, [], 0
         while True:
-            if page == page_total:
-                break
             r = await self.async_http(
                 method='get',
                 url=f'https://aiqicha.baidu.com/detail/icpinfoajax?p={page}&pid={pid}',
@@ -177,12 +182,13 @@ class Plugin(Base):
             if r.status_code == 200:
                 resp = r.json()
                 page_total = resp['data']['pageCount']
-                if page_total < page or page != resp['data']['page']:
+                if page != resp['data']['page']:
                     break
-                else:
-                    page += 1
                 for i in resp['data']['list']:
                     icp_info.append({"site": i['siteName'], "domains": i['domain'], "icp": i['icpNo']})
+                if page == page_total:
+                    break
+                page += 1
             else:
                 break
         return {"icp_info": icp_info}

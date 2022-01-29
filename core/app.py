@@ -237,7 +237,7 @@ class Application:
                 self.event,
                 self.threshold
             )
-            if self.options.get('shell', False):
+            if self.options.get('console', False):
                 # 暂停消息线程
                 self.event.clear()
                 call_func_name = obj.__decorate__

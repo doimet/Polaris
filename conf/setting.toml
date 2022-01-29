@@ -5,7 +5,7 @@
 [general]
 depth = 2
 threads = 300
-asyncio = 150
+asyncio = 100
 
 [notice]
 enable = false
@@ -54,4 +54,10 @@ key = ""
 link = "https://securitytrails.com"
 
 [aiqicha]
-cookie = ''
+# ua与cookie绑定 需要一同复制过来
+ua = ""
+cookie = ""
+
+[zoomeye]
+key = ""
+

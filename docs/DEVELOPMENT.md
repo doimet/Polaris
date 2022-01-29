@@ -79,9 +79,15 @@
   返回用户名称、用户密码
   ```
 ## 内置装饰器
-+ `cli`: 类方法装饰器, 将方法扩展成可交互模式(使用--shell参数调用)
-  + cli.command: 适用于无参数的情况
-  + cli.options: 适用于有参数的情况
++ `cli.options`: 类方法装饰器, 将方法扩展成可交互模式(使用--console参数调用)
+  ```
+  cli.options(parmas: str, desc: str, type, default, choice)
+  parmas: 参数名称
+  desc: 参数描述信息
+  type: 参数值类型, 可选: str、int、float、bool
+  default: 参数默认值
+  choice: 参数可选值
+  ``` 
 
 ## 插件模板
 ### 信息收集插件模板
@@ -174,6 +180,6 @@ class Plugin(Base):
 ```
 
 ## 注意事项
-1. 为了方便对插件返回数据进行处理, 插件的返回数据类型需统一为`dict`(shell方法返回值类型需是`str`)
+1. 为了方便对插件返回数据进行处理, 插件的返回数据类型需统一为`dict`(console方法返回值类型需是`str`)
 2. 插件内定义的方法名称并非固定的, 而是根据这个插件所接受的输入类型来以此命名的
 3. 一个插件类限定只允许使用一个类方法装饰器

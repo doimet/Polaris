@@ -34,7 +34,7 @@ def show_banner(func):
     def wrapper(options, processors):
         os.system('')
         print(f"""
-    \033[0;31mPolaris - 渗透测试框架 1.1.9\033[0m
+    \033[0;31mPolaris - 渗透测试框架 1.1.10\033[0m
 
  =# Author: 浮鱼
  =# Github: https://github.com/doimet/Polaris
@@ -117,8 +117,8 @@ def parse_verbose_param(ctx, param, value):
 @click.group(chain=True, invoke_without_command=True)
 @click.option('--input', '-i', help='设置目标.', callback=parse_input_param)
 @click.option('--output', '-o', help='输出结果到指定路径.', callback=parse_output_param)
-@click.option('--verbose', '-V', help='设置程序日志的等级.', callback=parse_verbose_param, count=True)
-@click.help_option('--help', '-H', help='显示帮助信息并退出.')
+@click.option('--verbose', '-v', help='设置程序日志的等级.', callback=parse_verbose_param, count=True)
+@click.help_option('--help', '-h', help='显示帮助信息并退出.')
 def cli(**kwargs):
     """ Easy to use red team attack tool """
 
@@ -147,9 +147,9 @@ def main(options, processors):
 
 @cli.command(name='collect')
 @click.option('--plugin', '-p', help='指定信息搜集的插件.', multiple=True)
-@click.option('--shell', '-S', help='开启插件的终端模式.', is_flag=True)
-@click.option('--list', '-L', help='列出插件的详细信息.', is_flag=True)
-@click.help_option('--help', '-H', help='显示帮助信息并退出.')
+@click.option('--console', '-c', help='开启插件控制台模式.', is_flag=True)
+@click.option('--list', '-l', help='列出插件的详细信息.', is_flag=True)
+@click.help_option('--help', '-h', help='显示帮助信息并退出.')
 def collect(**kwargs):
     """ 网络信息收集模块 """
     return merge_options(kwargs)
@@ -157,9 +157,9 @@ def collect(**kwargs):
 
 @cli.command(name='exploit')
 @click.option('--plugin', '-p', help='指定漏洞利用的插件.', multiple=True)
-@click.option('--shell', '-S', help='开启插件的终端模式.', is_flag=True)
-@click.option('--list', '-L', help='列出插件的详细信息.', is_flag=True)
-@click.help_option('--help', '-H', help='显示帮助信息并退出.')
+@click.option('--console', '-c', help='开启插件控制台模式.', is_flag=True)
+@click.option('--list', '-l', help='列出插件的详细信息.', is_flag=True)
+@click.help_option('--help', '-h', help='显示帮助信息并退出.')
 def exploit(**kwargs):
     """ 漏洞验证利用模块 """
     return merge_options(kwargs)
@@ -167,9 +167,9 @@ def exploit(**kwargs):
 
 @cli.command(name='login')
 @click.option('--plugin', '-p', help='指定漏洞利用的插件.', multiple=True)
-@click.option('--shell', '-S', help='开启插件的终端模式.', is_flag=True)
-@click.option('--list', '-L', help='列出插件的详细信息.', is_flag=True)
-@click.help_option('--help', '-H', help='显示帮助信息并退出.')
+@click.option('--console', '-c', help='开启插件控制台模式.', is_flag=True)
+@click.option('--list', '-l', help='列出插件的详细信息.', is_flag=True)
+@click.help_option('--help', '-h', help='显示帮助信息并退出.')
 def login(**kwargs):
     """ 服务登录爆破模块 """
     return merge_options(kwargs)
@@ -177,9 +177,9 @@ def login(**kwargs):
 
 @cli.command(name='tools')
 @click.option('--plugin', '-p', help='指定漏洞利用的插件.', multiple=True)
-@click.option('--shell', '-S', help='开启插件的终端模式.', is_flag=True)
-@click.option('--list', '-L', help='列出插件的详细信息.', is_flag=True)
-@click.help_option('--help', '-H', help='显示帮助信息并退出.')
+@click.option('--console', '-c', help='开启插件控制台模式.', is_flag=True)
+@click.option('--list', '-l', help='列出插件的详细信息.', is_flag=True)
+@click.help_option('--help', '-h', help='显示帮助信息并退出.')
 def auxiliary(**kwargs):
     """ 渗透测试辅助模块 """
     return merge_options(kwargs)

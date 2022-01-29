@@ -72,7 +72,7 @@
     python Cli.py --input domain:example.com collect --plugin china
     python Cli.py --input domain:example.com collect --plugin china --plugin ip138
     python Cli.py --input domain:example.com collect --plugin !ksubdomain
-    python Cli.py --input domain:example.com collect --plugin ksubdomain --shell
+    python Cli.py --input dork:184.173.106.60 collect --plugin zoomeye --console
     ```
     ![Image](docs/images/screenshort_08.png)
 + 收集ip信息
@@ -83,20 +83,25 @@
     ```shell script
     python Cli.py --input email:xxx@gmail.com collect
     ```
-
++ 收集公司信息
+    ```shell script
+    python Cli.py --input company:北京奇虎科技有限公司 collect --plugin aiqicha
+    ```
+    ![Image](docs/images/screenshort_09.png)
+  
 ### 漏洞利用
 ```shell script
 python Cli.py --input url:http://example.com exploit
 python Cli.py --input url:http://example.com exploit --plugin CVE-2021-22205
-python Cli.py --input url:http://example.com exploit --plugin CVE-2021-22205 --shell
+python Cli.py --input url:http://example.com exploit --plugin CVE-2021-22205 --console
 ```
-指定`shell`参数可进入交互模式
+指定`console`参数可进入交互模式
 ### 口令爆破
 
 ```shell script
 python Cli.py --input ip:x.x.x.x login
 python Cli.py --input ip:x.x.x.x login --plugin ssh
-python Cli.py --input ip:x.x.x.x login --plugin ssh --shell
+python Cli.py --input ip:x.x.x.x login --plugin ssh --console
 ```
 
 ### 渗透辅助

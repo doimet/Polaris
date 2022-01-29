@@ -29,16 +29,16 @@ class Logging(logging.Logger):
     """ 日志基类 """
 
     def __init__(self, level=logging.INFO, mode=0):
-        super(Logging, self).__init__(name='error', level=level)
+        super(Logging, self).__init__(name='error', level=level or 20)
         # self.__setFileHandler__()
         self.__setStreamHandler__()
-        self.is_shell_mode = mode # 1表示交互模式, 0非交互模式
+        self.is_console_mode = mode # 1表示交互模式, 0非交互模式
 
     def set_level(self, level):
         self.setLevel(level)
 
     def set_mode(self, mode):
-        self.is_shell_mode = mode
+        self.is_console_mode = mode
 
     def __setFileHandler__(self, level=30):
         filename = os.path.join('logs', '{}.log'.format(self.name))
@@ -64,8 +64,8 @@ class Logging(logging.Logger):
         if self.isEnabledFor(10):
             msg = str(msg)
             sys.stdout.write('\r' + 100 * ' ' + '\r')
-            shape = '[*]' if self.is_shell_mode else ' | '
-            self._log(10, "\r\033[0;34m{}\033[0m {}".format(shape, msg + (100 - len(msg)) * ' '), args, **kwargs)
+            shape = f'\r\033[0;34m[*]\033[0m' if self.is_console_mode else '\r\033[0;34m | \033[0m'
+            self._log(10, "{} {}".format(shape, msg + (100 - len(msg)) * ' '), args, **kwargs)
 
     def info(self, msg, *args, **kwargs):
         """ 消息输出 """
@@ -73,8 +73,8 @@ class Logging(logging.Logger):
         if self.isEnabledFor(20):
             msg = str(msg)
             sys.stdout.write('\r' + 100 * ' ' + '\r')
-            shape = '[i]' if self.is_shell_mode else ' | '
-            self._log(20, "\r\033[0;34m{}\033[0m {}".format(shape, msg + (100 - len(msg)) * ' '), args, **kwargs)
+            shape = '\r\033[0;34m[i]\033[0m' if self.is_console_mode else '\r\033[0;34m | \033[0m'
+            self._log(20, "{} {}".format(shape, msg + (100 - len(msg)) * ' '), args, **kwargs)
 
     def warn(self, msg, *args, **kwargs):
         """ 异常输出 """
@@ -82,8 +82,8 @@ class Logging(logging.Logger):
         if self.isEnabledFor(30):
             msg = str(msg)
             sys.stdout.write('\r' + 100 * ' ' + '\r')
-            shape = '[!]' if self.is_shell_mode else ' | '
-            self._log(30, "\r\033[0;33m{}\033[0m {}".format(shape, msg + (100 - len(msg)) * ' '), args, **kwargs)
+            shape = '\r\033[0;33m[!]\033[0m' if self.is_console_mode else '\r\033[0;34m | \033[0m'
+            self._log(30, "{} {}".format(shape, msg + (100 - len(msg)) * ' '), args, **kwargs)
 
     def error(self, msg, *args, **kwargs):
         """ 错误输出 """
@@ -91,8 +91,8 @@ class Logging(logging.Logger):
         if self.isEnabledFor(40):
             msg = str(msg)
             sys.stdout.write('\r' + 100 * ' ' + '\r')
-            shape = '[-]' if self.is_shell_mode else ' | '
-            self._log(40, "\r\033[0;31m{}\033[0m {}".format(shape, msg + (100 - len(msg)) * ' '), args, **kwargs)
+            shape = '\r\033[0;31m[-]\033[0m' if self.is_console_mode else '\r\033[0;34m | \033[0m'
+            self._log(40, "{} {}".format(shape, msg + (100 - len(msg)) * ' '), args, **kwargs)
 
     def child(self, msg, *args, **kwargs):
         """ 消息输出 """
@@ -276,10 +276,15 @@ class PluginBase(Request):
         Request.__init__(self, self.target)
         self.event = event
         self.threshold = threshold
-        self.log = Logging(level=target.get('args', {}).get('verbose', 20), mode=self.options.shell)
+        self.log = Logging(level=self.options.verbose, mode=self.options.console)
         self.async_pool = AsyncioExecute
         setattr(self.async_pool, 'threshold', threshold)
         self.echo_query = EchoQueryExecute
+        self.init()
+
+    def init(self):
+        """ 自定义初始化方法 """
+        ...
 
     @property
     def __method__(self):

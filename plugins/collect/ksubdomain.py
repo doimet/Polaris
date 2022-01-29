@@ -13,7 +13,7 @@ class Plugin(Base):
 
     @cli.options('domain', desc="设置输入目标", default='{self.target.value}')
     @cli.options('path', desc="子域名字典路径", default=os.path.join('data', 'subdomain.dict'))
-    @cli.options('workers', desc="协程并发数量", type=int, default=50)
+    @cli.options('workers', desc="协程并发数量", type=int, default='{self.config.general.asyncio}')
     def domain(self, domain, path, workers):
         with self.async_pool(max_workers=workers) as execute:
             with open(path, encoding='utf-8') as f:
