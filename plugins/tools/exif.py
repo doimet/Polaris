@@ -11,8 +11,9 @@ class Plugin(Base):
         "datetime": "2021-12-31"
     }
 
-    def file(self) -> dict:
-        with open(self.target.value, 'rb') as f:
+    @cli.options('path', desc='图片路径', default='{self.target.value}')
+    def file(self, path) -> dict:
+        with open(path, 'rb') as f:
             exif_dict = exifread.process_file(f)
         lon_ref = exif_dict.get('GPS GPSLongitudeRef', '')
         if not lon_ref:

@@ -1,6 +1,6 @@
 # -*-* coding:UTF-8
 import os
-from pymongo import MongoClient
+from motor.motor_asyncio import AsyncIOMotorClient
 
 
 class Plugin(Base):
@@ -8,7 +8,7 @@ class Plugin(Base):
         "author": "doimet",
         "references": ["-"],
         "description": "mongodb服务口令破解",
-        "datetime": "2022-01-02"
+        "datetime": "2022-02-02"
     }
 
     @cli.options('ip', desc="设置输入目标", default='{self.target.value}')
@@ -16,7 +16,7 @@ class Plugin(Base):
     @cli.options('method', desc="口令爆破模式 1:单点模式 2:交叉模式", type=int, default=2)
     @cli.options('username', desc="用户名称或字典文件", default=os.path.join('data', 'mongo_username.dict'))
     @cli.options('password', desc="用户密码或字典文件", default=os.path.join('data', 'mongo_password.dict'))
-    @cli.options('timeout', desc="连接超时时间", type=int, default=5)
+    @cli.options('timeout', desc="连接超时时间", type=int, default=3)
     @cli.options('workers', desc="协程并发数量", type=int, default='{self.config.general.asyncio}')
     def ip(self, ip, port, method, username, password, timeout, workers) -> dict:
         with self.async_pool(max_workers=workers) as execute:
@@ -30,16 +30,14 @@ class Plugin(Base):
 
     async def custom_task(self, ip, port, username, password, timeout):
         self.log.debug(f'Login => username: {username}, password: {password}')
-        conn = MongoClient(
+        conn = AsyncIOMotorClient(
             host=ip,
             port=port,
             username=username,
             password=password,
-            authSource="admin",
             serverSelectionTimeoutMS=timeout
         )
-        conn.list_database_names()
-        conn.close()
+        await conn.list_database_names()
         self.log.info(f'Login => username: {username}, password: {password} [success]')
         return {
             'port': port,

@@ -79,13 +79,28 @@ class Cli:
                         args = tuple([_['default'] for _ in kwargs.values()])
                         return func(cls, *args)
 
-                    cls.log.root(f'开始进入控制台模式 [quit:退出|help:帮助|run:运行]{" " * 10}')
+                    cls.log.root(rf'Start entering console mode [help¦show¦run¦quit]{" " * 10}')
                     cls.log.echo(f"\n    {cls.__info__.get('description', '暂无关于此漏洞的描述信息')}\n")
                     while True:
                         keyword = input('[localhost \033[0;31m~\033[0m]# ')
                         if keyword in ['quit', 'exit']:
                             break
-                        elif keyword in ['help', '?', 'show']:
+                        elif keyword in ['help', '?']:
+                            cls.log.info('Grammar:')
+                            cls.log.echo('set {variable} {value}')
+                            cls.log.echo('get {function} {value}')
+                            cls.log.echo('')
+                            cls.log.info('Function:')
+                            data = [
+                                {
+                                    'md5': 'MD5加密',
+                                    'base64Encode': 'Base64编码',
+                                    'base64Decode': 'Base64解码',
+                                }
+                            ]
+                            tb = get_table_form(data, layout='vertical', title=['name', 'notes'])
+                            cls.log.echo(tb)
+                        elif keyword in ['show']:
                             data = [
                                 {
                                     'variable': k,
@@ -96,11 +111,7 @@ class Cli:
                             if data:
                                 tb = get_table_form(data)
                                 cls.log.echo(tb)
-                                cls.log.echo('\nGrammar: ')
-                                cls.log.echo('  set {variable} {value}')
-                                cls.log.echo('  get {function} {value}\n')
-                                cls.log.echo('Function: ')
-                                cls.log.echo('  md5、base64Encode、base64Decode\n')
+
                         elif keyword in ['start', 'run']:
                             # 恢复消息线程
                             cls.event.set()
@@ -119,40 +130,40 @@ class Cli:
                             # 暂停消息线程
                             cls.event.clear()
                         else:
-                            set_match = re.match(r'set ([\w-]+)[ :=]?(.*)', keyword)
-                            get_match = re.match(r'get ([\w-]+)[ :=]?(.*)', keyword)
-                            if set_match:
-                                _name, _value = set_match.group(1), set_match.group(2)
-                                if _name in kwargs.keys():
-                                    convert = kwargs[_name]['type']
-                                    choice = kwargs[_name]['choice']
-                                    if len(choice) != 0 and _value not in choice:
-                                        cls.log.error(f"invalid choice: {_value}. (choose from {', '.join(choice)})")
-                                    elif convert not in [str, float, int, bool]:
-                                        cls.log.error("error in type")
-                                    kwargs[_name]['default'] = convert(_value)
-                                else:
-                                    cls.log.error("variable unavailable")
-
-                            elif get_match:
-                                _name, _value = get_match.group(1), get_match.group(2)
-                                if os.path.isfile(_value):
-                                    with open(_value, encoding='utf-8-sig') as f:
-                                        _value = f.read()
-                                elif re.match(r'^http[s]://.*', _value):
-                                    with cls.request('get', _value) as r:
-                                        _value = r.content
-
-                                if _name == 'md5':
-                                    cls.log.info(hashlib.md5(_value.encode()).hexdigest())
-                                elif _name == 'base64Encode':
-                                    cls.log.info(base64.b64encode(_value.encode()).decode())
-                                elif _name == 'base64Decode':
-                                    cls.log.info(base64.b64decode(_value).decode())
-                                else:
-                                    cls.log.error("function unavailable")
+                            match = re.match(r'([\w]{3}) ([\w-]+)[ :=]?(.*)', keyword)
+                            if not match:
+                                cls.log.error("Input is wrong")
                             else:
-                                cls.log.error("input is wrong")
+                                match_op, match_name, match_value = match.group(1), match.group(2), match.group(3)
+                                if match_op == 'set':
+                                    if match_name in kwargs.keys():
+                                        convert = kwargs[match_name]['type']
+                                        choice = kwargs[match_name]['choice']
+                                        if len(choice) != 0 and match_value not in choice:
+                                            cls.log.error(f"invalid choice: {match_value}. (choose from {', '.join(choice)})")
+                                        elif convert not in [str, float, int, bool]:
+                                            cls.log.error(f"Unknown type: {convert}")
+                                        kwargs[match_name]['default'] = convert(match_value)
+                                    else:
+                                        cls.log.error(f"Unknown variable: {match_name}")
+                                elif match_op == 'get':
+                                    if os.path.isfile(match_value):
+                                        with open(match_value, encoding='utf-8-sig') as f:
+                                            match_value = f.read()
+                                    elif re.match(r'^http[s]://.*', match_value):
+                                        with cls.request('get', match_value) as r:
+                                            match_value = r.content
+
+                                    if match_name == 'md5':
+                                        cls.log.info(f'Result: {hashlib.md5(match_value.encode()).hexdigest()}')
+                                    elif match_name == 'base64Encode':
+                                        cls.log.info(f'Result: {base64.b64encode(match_value.encode()).decode()}')
+                                    elif match_name == 'base64Decode':
+                                        cls.log.info(f'Result: {base64.b64decode(match_value).decode()}')
+                                    else:
+                                        cls.log.error(f"Unknown function: {match_name}")
+                                else:
+                                    cls.log.error(f"Unknown grammar: {match_op}")
                     return self.dataset
                 else:
                     return func(cls, **kwargs)

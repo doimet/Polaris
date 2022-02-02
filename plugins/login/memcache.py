@@ -1,5 +1,4 @@
 # -*-* coding:UTF-8
-import os
 from pymemcache.client.base import Client
 
 
@@ -13,23 +12,8 @@ class Plugin(Base):
 
     @cli.options('ip', desc="设置输入目标", default='{self.target.value}')
     @cli.options('port', desc="设置目标端口", type=int, default=11211)
-    @cli.options('method', desc="口令爆破模式 1:单点模式 2:交叉模式", type=int, default=2)
-    @cli.options('username', desc="用户名称或字典文件", default=os.path.join('data', 'memcache_username.dict'))
-    @cli.options('password', desc="用户密码或字典文件", default=os.path.join('data', 'memcache_password.dict'))
-    @cli.options('timeout', desc="连接超时时间", type=int, default=5)
-    @cli.options('workers', desc="协程并发数量", type=int, default='{self.config.general.asyncio}')
-    def ip(self, ip, port, method, username, password, timeout, workers) -> dict:
-        with self.async_pool(max_workers=workers) as execute:
-            for u, p in self.build_login_dict(
-                    method=method,
-                    username=username,
-                    password=password,
-            ):
-                execute.submit(self.custom_task, ip, port, u, p, timeout)
-            return {'LoginInfo': execute.result()}
-
-    async def custom_task(self, ip, port, username, password, timeout):
-        self.log.debug(f'Login => username: {username}, password: {password}')
+    @cli.options('timeout', desc="连接超时时间", type=int, default=3)
+    def ip(self, ip, port, timeout) -> dict:
         conn = Client(
             server=(ip, port),
             connect_timeout=timeout,
@@ -37,10 +21,12 @@ class Plugin(Base):
         )
         conn.version()
         conn.close()
-        self.log.info(f'Login => username: {username}, password: {password} [success]')
+        self.log.info(f'Login => username: null, password: null [success]')
         return {
-            'port': port,
-            'server': 'memcache',
-            'username': username,
-            'password': password
+            'LoginInfo': {
+                'port': port,
+                'server': 'memcache',
+                'username': 'null',
+                'password': 'null'
+            }
         }

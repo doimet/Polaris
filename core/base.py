@@ -226,7 +226,7 @@ class AsyncioExecute(object):
                 res = await functools.partial(func, *args)()
                 return res
             except Exception as e:
-                pass
+                sys.stdout.write('\r' + 100 * ' ' + '\r')
 
     def on_finish(self, future):
         if self.threshold:

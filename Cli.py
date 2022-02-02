@@ -34,7 +34,7 @@ def show_banner(func):
     def wrapper(options, processors):
         os.system('')
         print(f"""
-    \033[0;31mPolaris - 渗透测试框架 1.1.11\033[0m
+    \033[0;31mPolaris - 渗透测试框架 1.1.12\033[0m
 
  =# Author: 浮鱼
  =# Github: https://github.com/doimet/Polaris
@@ -180,7 +180,7 @@ def login(**kwargs):
 @click.option('--console', '-c', help='开启插件控制台模式.', is_flag=True)
 @click.option('--list', '-l', help='列出插件的详细信息.', is_flag=True)
 @click.help_option('--help', '-h', help='显示帮助信息并退出.')
-def auxiliary(**kwargs):
+def tools(**kwargs):
     """ 渗透测试辅助模块 """
     return merge_options(kwargs)
 

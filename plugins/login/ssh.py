@@ -1,6 +1,6 @@
 # -*-* coding:UTF-8
 import os
-import paramiko
+import asyncssh
 
 
 class Plugin(Base):
@@ -16,7 +16,7 @@ class Plugin(Base):
     @cli.options('method', desc="口令爆破模式 1:单点模式 2:交叉模式", type=int, default=2)
     @cli.options('username', desc="用户名称或字典文件", default=os.path.join('data', 'ssh_username.dict'))
     @cli.options('password', desc="用户密码或字典文件", default=os.path.join('data', 'ssh_password.dict'))
-    @cli.options('timeout', desc="连接超时时间", type=int, default=5)
+    @cli.options('timeout', desc="连接超时时间", type=int, default=3)
     @cli.options('workers', desc="协程并发数量", type=int, default='{self.config.general.asyncio}')
     def ip(self, ip, port, method, username, password, timeout, workers) -> dict:
         with self.async_pool(max_workers=workers) as execute:
@@ -30,16 +30,7 @@ class Plugin(Base):
 
     async def custom_task(self, ip, port, username, password, timeout):
         self.log.debug(f'Login => username: {username}, password: {password}')
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(
-            hostname=ip,
-            port=port,
-            username=username,
-            password=password,
-            timeout=timeout
-        )
-        ssh.close()
+        await asyncssh.connect(ip, port=port, username=username, password=password, known_hosts=None)
         self.log.info(f'Login => username: {username}, password: {password} [success]')
         return {
             'port': port,

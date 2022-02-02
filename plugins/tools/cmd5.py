@@ -5,15 +5,16 @@ class Plugin(Base):
     __info__ = {
         "author": "doimet",
         "references": ["https://www.cmd5.com"],
-        "description": "CMD5解密",
+        "description": "CMD5解密hash",
         "datetime": "2021-12-27"
     }
 
-    def md5(self) -> dict:
+    @cli.options('hash', desc='需要解密的hash', default='{self.target.value}')
+    def md5(self, _hash) -> dict:
         r = self.request(
             method='get',
             url='https://www.cmd5.com/api.ashx',
-            params={'email': self.config.cmd5.email, 'key': self.config.cmd5.key, 'hash': self.target.value}
+            params={'email': self.config.cmd5.email, 'key': self.config.cmd5.key, 'hash': _hash}
         )
         if r.status_code == 200:
             response = r.text

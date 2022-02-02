@@ -16,7 +16,7 @@ class Plugin(Base):
     @cli.options('method', desc="口令爆破模式 1:单点模式 2:交叉模式", type=int, default=2)
     @cli.options('username', desc="用户名称或字典文件", default=os.path.join('data', 'ftp_username.dict'))
     @cli.options('password', desc="用户密码或字典文件", default=os.path.join('data', 'ftp_password.dict'))
-    @cli.options('timeout', desc="连接超时时间", type=int, default=5)
+    @cli.options('timeout', desc="连接超时时间", type=int, default=3)
     @cli.options('workers', desc="协程并发数量", type=int, default='{self.config.general.asyncio}')
     def ip(self, ip, port, method, username, password, timeout, workers) -> dict:
         with self.async_pool(max_workers=workers) as execute:

@@ -66,7 +66,7 @@ def keep_data_format(data):
     return data
 
 
-def get_table_form(data, seq=500, layout='horizontal', border=True, align='c'):
+def get_table_form(data, seq=500, layout='horizontal', border=True, align='c', title=None):
     """ 获得表单数据 """
 
     tb = prettytable.PrettyTable(border=border)
@@ -75,7 +75,7 @@ def get_table_form(data, seq=500, layout='horizontal', border=True, align='c'):
             title_list = ['id'] + list(data[0].keys())
 
         else:
-            title_list = ['id', 'info']
+            title_list = title or ['id', 'info']
         tb.field_names = title_list
         for title in title_list:
             tb.align[title] = align
@@ -89,7 +89,7 @@ def get_table_form(data, seq=500, layout='horizontal', border=True, align='c'):
                 one_value = [str(one).strip()]
             tb.add_row([str(index + 1) if index < seq else '...'] + one_value)
     elif layout == 'vertical':
-        tb.field_names = ['key', 'value']
+        tb.field_names = title or ['key', 'value']
         if isinstance(data, list) and len(data) == 1:
             data = data[0]
         for key, value in data.items():

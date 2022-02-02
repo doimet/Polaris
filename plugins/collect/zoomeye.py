@@ -16,8 +16,8 @@ class Plugin(Base):
     @cli.options('limit', desc="限制条数", type=int, default=100)
     @cli.options('timeout', desc="请求超时时间", type=int, default=30)
     @cli.options('ip_type', desc="获取数据类型, 默认为ipv4,ipv6全选", default='ipv4,ipv6')
-    def dork(self, _type, dork, limit, timeout, ip_type) -> dict:
-        return getattr(self, 'custom_search_' + _type)(dork, limit, timeout, ip_type)
+    def dork(self, mode, dork, limit, timeout, ip_type) -> dict:
+        return getattr(self, 'custom_search_' + mode)(dork, limit, timeout, ip_type)
 
     def custom_search_host(self, query, limit, timeout, ip_type):
         page, total, page_total, data_list = 1, 0, 0, []
