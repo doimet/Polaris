@@ -60,8 +60,6 @@ class Request:
         self.current_url = ''
         self.headers = {
             'User-Agent': RandomUserAgent.get(),
-            "Accept": "*/*",
-            "Connection": "close"
         }
         self.client = httpx.Client(verify=False)
         self.async_client = httpx.AsyncClient(verify=False)

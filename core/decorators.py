@@ -45,7 +45,7 @@ class Cli:
         """ 输入参数处理 """
         kwargs = {}
         for k, v in value.items():
-            params = {'default': None, 'desc': '-', 'type': str, 'choice': []}
+            params = {'default': None, 'desc': '-', 'type': str, 'choice': [], 'required': False}
             params.update(v)
             v = params
             # 参数值校验
@@ -53,7 +53,8 @@ class Cli:
                     [
                         isinstance(v['desc'], str),
                         v['type'] in [str, int, float, bool],
-                        isinstance(v['choice'], list)
+                        isinstance(v['choice'], list),
+                        isinstance(v['required'], bool)
                     ]
             ):
                 raise Exception(f'plugin {cls.options.plugin} cli-params value type is wrong')
@@ -113,22 +114,26 @@ class Cli:
                                 cls.log.echo(tb)
 
                         elif keyword in ['start', 'run']:
-                            # 恢复消息线程
-                            cls.event.set()
-
-                            args = tuple([v['default'] for k, v in kwargs.items()])
-                            try:
-                                if all([True if _ else False for _ in args]):
-                                    res = func(cls, *args)
-                                else:
-                                    res = func(cls)
-                                self.dataset = res
-                                self.echo_handle(cls.log, name=cls.options.plugin, data=res)
-                            except Exception as e:
-                                cls.log.warn(e)
-
-                            # 暂停消息线程
-                            cls.event.clear()
+                            # 参数值是否必须检测
+                            for k, v in kwargs.items():
+                                if v['required'] and not v['default']:
+                                    cls.log.error(f"Undefined variable: {k}")
+                                    break
+                            else:
+                                # 恢复消息线程
+                                cls.event.set()
+                                args = tuple([v['default'] for k, v in kwargs.items()])
+                                try:
+                                    if all([True if _ else False for _ in args]):
+                                        res = func(cls, *args)
+                                    else:
+                                        res = func(cls)
+                                    self.dataset = res
+                                    self.echo_handle(cls.log, name=cls.options.plugin, data=res)
+                                except Exception as e:
+                                    cls.log.warn(e)
+                                # 暂停消息线程
+                                cls.event.clear()
                         else:
                             match = re.match(r'([\w]{3}) ([\w-]+)[ :=]?(.*)', keyword)
                             if not match:

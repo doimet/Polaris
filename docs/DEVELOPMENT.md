@@ -81,12 +81,13 @@
 ## 内置装饰器
 + `cli.options`: 类方法装饰器, 将方法扩展成可交互模式(使用--console参数调用)
   ```
-  cli.options(parmas: str, desc: str, type, default, choice)
+  cli.options(parmas: str, desc: str, type, required, default, choice)
   parmas: 参数名称
   desc: 参数描述信息
   type: 参数值类型, 可选: str、int、float、bool
+  required: 参数是否必须, bool类型
   default: 参数默认值
-  choice: 参数可选值
+  choice: 参数可选值, list类型
   ``` 
 
 ## 插件模板
