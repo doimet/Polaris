@@ -13,12 +13,18 @@
   ```
   async_pool(max_workers: int) -> Object
   传入并发数量
-  返回执行对象
+  返回执行对象, 对象可调用如下方法:
+  submit: 用于提交任务, 需传入任务函数、任务参数
+  result: 用于获取返回结果
   ```
 + `echo_query`: 针对命令无回显时调用(上下文管理)
   ```
   echo_query() -> Object
-  返回查询对象
+  返回查询对象, 对象可调用如下方法:
+  get_url: 用于获取url
+  get_subdomain: 用于获取子域名
+  verify: 用于请求验证 True or False
+  result: 用于获取返回结果
   ```
   
 ## 内置方法
@@ -77,6 +83,12 @@
   build_login_dict(method: int, username: str, password: str) -> iterable
   传入口令组合模式、用户名称字典、用户密码字典
   返回用户名称、用户密码
+  ```
++ `is_exist_waf`: 判断Waf
+  ```
+  is_exist_waf(content: str) -> bool
+  传入网页文本内容
+  返回对waf的判断True or False
   ```
 ## 内置装饰器
 + `cli.options`: 类方法装饰器, 将方法扩展成可交互模式(使用--console参数调用)

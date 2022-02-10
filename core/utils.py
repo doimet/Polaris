@@ -4,6 +4,7 @@ import json
 import base64 as b64
 import random
 import string
+from flashtext import KeywordProcessor
 
 
 def build_random_str(length=8):
@@ -45,6 +46,21 @@ def jsonp_to_json(jsonp_str):
     """ jsonp转json """
 
     return json.loads(re.match(".*?({.*}).*", jsonp_str, re.S).group(1))
+
+
+def is_exist_waf(content):
+    """" 判断waf """
+    kp = KeywordProcessor()
+    kp.add_keywords_from_list(
+        [
+            "安全拦截",
+            "攻击行为",
+            "安全威胁",
+        ]
+    )
+    for keyword in kp.extract_keywords(content):
+        return True
+    return False
 
 
 def build_login_dict(method=1, username='admin', password='admin'):

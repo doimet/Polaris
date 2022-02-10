@@ -16,7 +16,7 @@ class Plugin(Base):
             params={'apikey': self.config.securitytrails.key}
         )
         if r.status_code in [403, 429]:
-            raise Exception('Invalid API Key')
+            raise Exception('Invalid api key')
         elif r.status_code == 200:
             return {
                 'SubdomainList': [

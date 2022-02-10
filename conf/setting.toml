@@ -57,7 +57,10 @@ link = "https://securitytrails.com"
 # ua与cookie绑定 需要一同复制过来
 ua = ""
 cookie = ""
+link = "https://aiqicha.baidu.com"
 
 [zoomeye]
 key = ""
+link = "https://zoomeye.org"
+
 

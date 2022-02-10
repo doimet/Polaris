@@ -1,11 +1,12 @@
 # -*-* coding:UTF-8
-import _socket
-import hashlib
+import httpx
 import random
 import socket
-import httpx
-from urllib.parse import urlparse, urljoin
+import _socket
+import hashlib
 import requests.packages.urllib3
+from urllib.parse import urlparse, urljoin
+
 
 requests.packages.urllib3.disable_warnings()
 
@@ -54,8 +55,9 @@ class DNSProxy:
 class Request:
     """ 网络封装 """
 
-    def __init__(self, target=None):
+    def __init__(self, target=None, config=None):
         self.target = target
+        self.config = config
         self.url_cache = {}
         self.current_url = ''
         self.headers = {
@@ -65,32 +67,32 @@ class Request:
         self.async_client = httpx.AsyncClient(verify=False)
         # DNSProxy([self.resolve_name], self.resolve_host)
 
-    def __del__(self):
-        self.client.close()
-        self.async_client.aclose()
+    # def __del__(self):
+    #     self.client.close()
+    #     self.async_client.aclose()
 
-    @property
-    def resolve_name(self):
-        return urlparse(self.current_url).netloc.split(":")[0]
+    # @property
+    # def resolve_name(self):
+    #     return urlparse(self.current_url).netloc.split(":")[0]
+    #
+    # @property
+    # def resolve_host(self):
+    #     name = urlparse(self.current_url).netloc.split(":")[0]
+    #     try:
+    #         host = socket.gethostbyname(name)
+    #     except socket.gaierror:
+    #
+    #         # Check if hostname resolves to IPv6 address only
+    #         try:
+    #             host = socket.gethostbyname(host, None, socket.AF_INET6)
+    #         except socket.gaierror:
+    #             raise Exception({"message": "Couldn't resolve DNS"})
+    #     return host
 
-    @property
-    def resolve_host(self):
-        name = urlparse(self.current_url).netloc.split(":")[0]
-        try:
-            host = socket.gethostbyname(name)
-        except socket.gaierror:
-
-            # Check if hostname resolves to IPv6 address only
-            try:
-                host = socket.gethostbyname(host, None, socket.AF_INET6)
-            except socket.gaierror:
-                raise Exception({"message": "Couldn't resolve DNS"})
-        return host
-
-    def request(self, method='get', url=None, path=None, *args, **kwargs):
+    def request(self, method='get', url=None, path=None, cache=False, *args, **kwargs):
         if not url and path and self.target:
             url = urljoin(self.target.value, path)
-        if url in self.url_cache:
+        if url in self.url_cache and cache:
             return self.url_cache[url]
         self.current_url = url
         self.headers.update(kwargs.get('headers', {}))
@@ -105,14 +107,14 @@ class Request:
                 **kwargs
             )
         except Exception as e:
-            raise Exception({"Error": e})
+            raise Exception(e)
         self.url_cache[url] = response
         return self.decorate_response(response)
 
-    async def async_http(self, method='get', url=None, path=None, *args, **kwargs):
+    async def async_http(self, method='get', url=None, path=None, cache=False, *args, **kwargs):
         if not url and path and self.target:
             url = urljoin(self.target.value, path)
-        if url in self.url_cache:
+        if url in self.url_cache and cache:
             return self.url_cache[url]
         self.current_url = url
         self.headers.update(kwargs.get('headers', {}))
@@ -127,7 +129,7 @@ class Request:
                 **kwargs
             )
         except Exception as e:
-            raise Exception({"Error": e})
+            raise Exception(e)
         self.url_cache[url] = response
         return self.decorate_response(response)
 

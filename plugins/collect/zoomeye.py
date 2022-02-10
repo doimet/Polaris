@@ -57,8 +57,10 @@ class Plugin(Base):
                     if page != page_total:
                         page += 1
                         continue
+            elif r.status_code == 401:
+                raise Exception('Invalid api key')
             else:
-                self.log.warn(f'code: {r.status_code} message: {r.text}')
+                self.log.warn(r.text)
             break
         self.log.info(f'search result total: {total}')
         return {"data_list": data_list}
@@ -100,8 +102,10 @@ class Plugin(Base):
                     if page != page_total:
                         page += 1
                         continue
+            elif r.status_code == 401:
+                raise Exception('Invalid api key')
             else:
-                self.log.warn(f'code: {r.status_code} message: {r.text}')
+                self.log.warn(r.text)
             break
         self.log.info(f'search result total: {total}')
         return {"data_list": data_list}
@@ -140,7 +144,9 @@ class Plugin(Base):
                     if page != page_total:
                         page += 1
                         continue
+            elif r.status_code == 401:
+                raise Exception('Invalid api key')
             else:
-                self.log.warn(f'code: {r.status_code} message: {r.text}')
+                self.log.warn(r.text)
             break
         return {"data_list": data_list}

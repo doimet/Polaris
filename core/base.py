@@ -1,25 +1,25 @@
 # -*-* coding:UTF-8
+import re
+import sys
+import time
+import json
+import yaml
+import uuid
+import celpy
+import random
 import asyncio
 import hashlib
-import json
 import os.path
-import random
-import re
-import time
-import celpy
-import yaml
-import functools
-import sys
 import logging
+import functools
 import urllib.parse
+from core.request import Request
+from Cryptodome.Hash import SHA256
+from Cryptodome.PublicKey import RSA
+from flashtext import KeywordProcessor
 from base64 import b64encode, b64decode
 from Cryptodome.Cipher import AES, PKCS1_OAEP
-from Cryptodome.PublicKey import RSA
-from Cryptodome.Hash import SHA256
-from flashtext import KeywordProcessor
 from logging.handlers import TimedRotatingFileHandler
-from core.request import Request
-
 
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
@@ -32,7 +32,7 @@ class Logging(logging.Logger):
         super(Logging, self).__init__(name='error', level=level or 20)
         # self.__setFileHandler__()
         self.__setStreamHandler__()
-        self.is_console_mode = mode # 1表示交互模式, 0非交互模式
+        self.is_console_mode = mode  # 1表示交互模式, 0非交互模式
 
     def set_level(self, level):
         self.setLevel(level)
@@ -80,18 +80,26 @@ class Logging(logging.Logger):
         """ 异常输出 """
 
         if self.isEnabledFor(30):
-            msg = str(msg)
             sys.stdout.write('\r' + 100 * ' ' + '\r')
-            shape = '\r\033[0;33m[!]\033[0m' if self.is_console_mode else '\r\033[0;34m | \033[0m'
+            if self.is_console_mode:
+                shape = '\r\033[0;33m[!]\033[0m'
+                msg = str(msg)
+            else:
+                shape = '\r\033[0;34m | \033[0m'
+                msg = f'\033[0;33m{msg}\033[0m'
             self._log(30, "{} {}".format(shape, msg + (100 - len(msg)) * ' '), args, **kwargs)
 
     def error(self, msg, *args, **kwargs):
         """ 错误输出 """
 
         if self.isEnabledFor(40):
-            msg = str(msg)
             sys.stdout.write('\r' + 100 * ' ' + '\r')
-            shape = '\r\033[0;31m[-]\033[0m' if self.is_console_mode else '\r\033[0;34m | \033[0m'
+            if self.is_console_mode:
+                shape = '\r\033[0;31m[-]\033[0m'
+                msg = str(msg)
+            else:
+                shape = '\r\033[0;34m | \033[0m'
+                msg = f'\033[0;31m{msg}\033[0m'
             self._log(40, "{} {}".format(shape, msg + (100 - len(msg)) * ' '), args, **kwargs)
 
     def child(self, msg, *args, **kwargs):
@@ -119,13 +127,13 @@ class Logging(logging.Logger):
 class EchoQueryExecute:
     def __init__(self):
         rsa = RSA.generate(2048)
-        random_str = str(uuid4())
+        random_str = str(uuid.uuid4())
         self.public_key = rsa.publickey().exportKey()
         self.private_key = rsa.exportKey()
         self.secret = random_str
         self.correlation_id = random_str[:20]
-        self.result = None
         self.session = Request()
+        self.result_list = []
         self.create()
 
     def create(self):
@@ -137,24 +145,33 @@ class EchoQueryExecute:
                 "public-key": b64encode(self.public_key).decode("utf-8"),
                 "secret-key": self.secret,
                 "correlation-id": self.correlation_id
-            }
+            },
         )
 
-    def get_domain(self):
+    def get_subdomain(self):
         """ 获取域名 """
-        domain = self.correlation_id
-        while len(domain) < 33:
-            domain += chr(ord('a') + random.randint(1, 24))
-        domain += ".interact.sh"
-        return domain
+        subdomain = self.correlation_id
+        while len(subdomain) < 33:
+            subdomain += chr(ord('a') + random.randint(1, 24))
+        subdomain += ".interact.sh"
+        return subdomain
 
     def get_url(self):
         """ 获取url """
-        pass
+        subdomain = self.get_subdomain()
+        url = 'http://' + subdomain
+        return url
+
+    def result(self):
+        """ 获取结果 """
+        if self.result_list:
+            self.result_list = sorted(self.result_list, key=lambda x: x['timestamp'].split('T')[0])[0]
+        return self.result_list
 
     def select(self):
         """ 轮询结果 """
         count = 3
+        status = False
         result = []
         while count:
             try:
@@ -166,25 +183,38 @@ class EchoQueryExecute:
                     for i in resp['data']:
                         cipher = PKCS1_OAEP.new(RSA.importKey(self.private_key), hashAlgo=SHA256)
                         decode = b64decode(i)
-                        cryptor = AES.new(
+                        crypto = AES.new(
                             key=cipher.decrypt(b64decode(resp['aes_key'])),
                             mode=AES.MODE_CFB,
                             IV=decode[:AES.block_size],
                             segment_size=128
                         )
-                        plain_text = cryptor.decrypt(decode)
-                        result.append(json.loads(plain_text[16:]))
-                    return result
+                        plain_text = crypto.decrypt(decode)
+                        data = json.loads(plain_text[16:])
+                        res = '...'
+                        if data['protocol'] == 'http':
+                            options = parse_raw_request(data['raw-request'])
+                            if options['method'] == 'POST':
+                                res = options['data']
+                            elif options['method'] == 'GET':
+                                res = options['path']
+                        result.append(
+                            {
+                                'result': res,
+                                'address': data['remote-address'],
+                                'datetime': data['timestamp']
+                            }
+                        )
+                        status = True
             except Exception as e:
                 count -= 1
                 time.sleep(1)
                 continue
-        return []
+        return status, result
 
-    @property
     def verify(self):
         """ 验证 """
-        status, self.result = self.select()
+        status, self.result_list = self.select()
         return True if status else False
 
     def __enter__(self):
@@ -216,7 +246,7 @@ class AsyncioExecute(object):
 
     def submit(self, func, *args):
         task = asyncio.ensure_future(self.work(func, args))
-        task.set_name(('-', args[0])[len(args) != 0])
+        task.set_name(('-', args[-1])[len(args) != 0])
         task.add_done_callback(self.on_finish)
         self._all_task.append(task)
 
@@ -226,7 +256,7 @@ class AsyncioExecute(object):
                 res = await functools.partial(func, *args)()
                 return res
             except Exception as e:
-                sys.stdout.write('\r' + 100 * ' ' + '\r')
+                pass
 
     def on_finish(self, future):
         if self.threshold:
@@ -263,17 +293,7 @@ class PluginBase(Request):
         self.config = DictObject(config)
         self.target = DictObject(target)
         self.options = DictObject(options)
-        if self.target.key == 'url':
-            res = urllib.parse.urlparse(self.target.value)
-            self.target.update(
-                {
-                    'url': {
-                        'host': res.netloc,
-                        'path': res.path
-                    }
-                }
-            )
-        Request.__init__(self, self.target)
+        Request.__init__(self, self.target, self.config)
         self.event = event
         self.threshold = threshold
         self.log = Logging(level=self.options.verbose, mode=self.options.console)

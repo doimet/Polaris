@@ -2,15 +2,13 @@
 import os
 import sys
 import time
+import yaml
 import threading
 import importlib
-import functools
 from pathlib import Path
-import yaml
 from core.base import PluginBase, PluginObject, Logging, XrayPoc
 from core.common import get_table_form, merge_ip_segment
 from core.common import merge_same_data, keep_data_format
-from core.static import command_items_alias
 from concurrent.futures import ThreadPoolExecutor, as_completed, wait, ALL_COMPLETED, FIRST_EXCEPTION
 
 
@@ -53,7 +51,7 @@ class Application:
 
         base_path = os.path.join('plugins', self.options['command'])
         for file_path, file_name, file_ext in self.get_plugin_list(base_path, self.options['plugin']):
-            plugin_obj = self.get_plugin_object(os.path.join(file_path, file_name+file_ext))
+            plugin_obj = self.get_plugin_object(os.path.join(file_path, file_name + file_ext))
 
             plugin_info = plugin_obj.__info__
             inner_method = plugin_obj({}, {}, {}, None, {}).__method__
@@ -61,24 +59,25 @@ class Application:
             status = '\033[0;31m✖ \033[0m' if (
                     file_name in self.config.keys() and self.config[file_name].get('enable', False)
             ) else '\033[0;92m✔ \033[0m'
-            show_list.append([
-                {
-                    '名称': file_name,
-                    '描述': plugin_info['description'],
-                    '支持': support,
-                    '状态': status
-                },
-                {
-                    '名称': file_name,
-                    '作者': plugin_info['author'],
-                    '描述': plugin_info['description'],
-                    '支持': support,
-                    '来源': ', '.join(plugin_info['references']) if isinstance(plugin_info['references'], list) else
-                    plugin_info['references'],
-                    '状态': status,
-                    '日期': plugin_info['datetime'],
-                }
-            ]
+            show_list.append(
+                [
+                    {
+                        '名称': file_name,
+                        '描述': plugin_info['description'],
+                        '支持': support,
+                        '状态': status
+                    },
+                    {
+                        '名称': file_name,
+                        '作者': plugin_info['author'],
+                        '描述': plugin_info['description'],
+                        '支持': support,
+                        '来源': ', '.join(plugin_info['references']) if isinstance(plugin_info['references'], list) else
+                        plugin_info['references'],
+                        '状态': status,
+                        '日期': plugin_info['datetime'],
+                    }
+                ]
             )
         if len(show_list) == 1:
             is_show_detail = True
@@ -86,11 +85,10 @@ class Application:
             is_show_detail = False
 
         plugin_list = sorted([_[is_show_detail] for _ in show_list], key=lambda keys: keys['名称'])
-        plugin_type = command_items_alias.get(self.options["command"])
         if len(plugin_list) == 0:
-            self.log.root(f'没有找到{plugin_type}相关插件')
+            self.log.root(f'Not found {self.options["command"]} plugin')
         else:
-            self.log.root(f'列出{plugin_type}插件: {len(plugin_list)}')
+            self.log.root(f'List {self.options["command"]} plugin: {len(plugin_list)}')
             tb = get_table_form(plugin_list, layout='vertical' if is_show_detail else 'horizontal')
             self.log.child(str(tb).replace('\n', '\n\033[0;34m | \033[0m '))
 
@@ -103,7 +101,7 @@ class Application:
         output_object = importlib.import_module("core.output")
 
         def callback_failure(path, data):
-            self.log.warn('export file format not support, auto change json format')
+            self.log.warn('Export file format not support, auto change json format')
             getattr(output_object, 'export_json')(path.replace(file_ext, '.json'), data)
 
         getattr(output_object, 'export_' + file_ext[1:], callback_failure)(self.options['output'], self.dataset)
@@ -121,7 +119,7 @@ class Application:
                         continue
                     base_path = os.path.join('plugins', self.options['command'])
                     for file_path, file_name, file_ext in self.get_plugin_list(base_path, self.options['plugin']):
-                        plugin_obj = self.get_plugin_object(os.path.join(file_path, file_name+file_ext))
+                        plugin_obj = self.get_plugin_object(os.path.join(file_path, file_name + file_ext))
                         if target_tuple[0] not in dir(plugin_obj):
                             continue
                         self.job_total += 1
@@ -192,7 +190,7 @@ class Application:
     def has_command(self, command):
         plugin_list = self.get_plugin_list('plugins', self.options['plugin'])
         for file_path, file_name, file_ext in plugin_list:
-            plugin_obj = self.get_plugin_object(os.path.join(file_path, file_name+file_ext))
+            plugin_obj = self.get_plugin_object(os.path.join(file_path, file_name + file_ext))
             if command in dir(plugin_obj):
                 return True
         return False

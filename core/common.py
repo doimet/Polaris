@@ -1,4 +1,6 @@
 # -*-* coding:UTF-8
+import re
+
 import prettytable
 from itertools import chain
 from core.base import Interval
@@ -100,6 +102,22 @@ def get_table_form(data, seq=500, layout='horizontal', border=True, align='c', t
         raise Exception('Parameter error')
 
     return tb
+
+
+def parse_raw_request(raw):
+
+    options, flag = {'headers': {}}, False
+    for line in raw.split('\r\n'):
+        match = re.search(r"\A([A-Z]+) (.+) HTTP/[\d.]+\Z", line)
+        if match:
+            options['method'], options['path'] = match.groups()
+        elif re.search(r"\A\S+:", line):
+            name, value = line.split(':', 1)
+            options['headers'][name] = value
+    if options['method'] == 'POST':
+        options['data'] = raw.split('\r\n\r\n', 1)[1]
+
+    return options
 
 
 def ip_to_long(str_ip):

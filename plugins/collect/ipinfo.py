@@ -13,8 +13,11 @@ class Plugin(Base):
         r = self.request(
             method='get',
             url=f'http://ipinfo.io/{self.target.value}',
-            params={'token': self.config.ipinfo.key}
+            params={'token': self.config.ipinfo.key},
+
         )
+        if not self.config.ipinfo.key or r.status_code == 403:
+            raise Exception('Invalid api key')
         if r.status_code == 200:
             response = r.json()
             return {

@@ -32,7 +32,7 @@ class Plugin(Base):
         if r.status_code == 200:
             result = re.findall('SiteLicense:"(.*?)",SiteName:"(.*?)",MainPage:"(.*?)"', r.text)
             if result:
-                result = [{'备案编号': _[0], '注册公司': _[1], '子域名': _[2]} for _ in result]
+                result = [{'icp': _[0], 'company': _[1], 'subdomain': _[2]} for _ in result]
                 return {
-                    '备案列表': [dict(t) for t in set([tuple(d.items()) for d in result])]
+                    'IcpList': [dict(t) for t in set([tuple(d.items()) for d in result])]
                 }

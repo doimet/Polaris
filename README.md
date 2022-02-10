@@ -88,6 +88,13 @@
     python Cli.py --input company:北京奇虎科技有限公司 collect --plugin aiqicha
     ```
     ![Image](docs/images/screenshort_09.png)
+
+### 扫描功能
+
++ 端口扫描
+    ```shell script
+    python Cli.py --input ip:x.x.x.x xscan -p portscan
+    ```
   
 ### 漏洞利用
 ```shell script

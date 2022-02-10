@@ -34,7 +34,7 @@ def show_banner(func):
     def wrapper(options, processors):
         os.system('')
         print(f"""
-    \033[0;31mPolaris - 渗透测试框架 1.1.13\033[0m
+    \033[0;31mPolaris - 渗透测试框架 1.2.0\033[0m
 
  =# Author: 浮鱼
  =# Github: https://github.com/doimet/Polaris
@@ -152,6 +152,16 @@ def main(options, processors):
 @click.help_option('--help', '-h', help='显示帮助信息并退出.')
 def collect(**kwargs):
     """ 网络信息收集模块 """
+    return merge_options(kwargs)
+
+
+@cli.command(name='xscan')
+@click.option('--plugin', '-p', help='指定扫描的插件.', multiple=True)
+@click.option('--console', '-c', help='开启插件控制台模式.', is_flag=True)
+@click.option('--list', '-l', help='列出插件的详细信息.', is_flag=True)
+@click.help_option('--help', '-h', help='显示帮助信息并退出.')
+def xscan(**kwargs):
+    """ 系统应用扫描模块 """
     return merge_options(kwargs)
 
 

@@ -20,12 +20,10 @@ class Plugin(Base):
             if result['status'] == 'success':
                 return {
                     'IpInfo': {
-                        '归属地': result['country'] + (f', {result["regionName"]}' if result['regionName'] else ' ') + (
+                        'address': result['country'] + (f', {result["regionName"]}' if result['regionName'] else ' ') + (
                             f', {result["city"]}' if result['city'] else ''),
-                        '运营商': result['isp'],
-                        '所属组织': result['org'],
-                        '代理': result['proxy'],
-                        '移动': result['mobile'],
-                        'ASN': result['as'].split(' ')[0][2:]
+                        'isp': result['isp'],
+                        'org': result['org'],
+                        'asn': result['as'].split(' ')[0][2:]
                     }
                 }

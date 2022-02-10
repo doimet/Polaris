@@ -1,7 +1,8 @@
-import base64
-import hashlib
+# -*-* coding:UTF-8
 import os
 import re
+import base64
+import hashlib
 from core.common import get_table_form
 
 
@@ -26,9 +27,9 @@ class Cli:
         """ 数据回显处理 """
 
         if isinstance(data, str) or isinstance(data, int):
-            log.info(f'{key}: {str(data).strip()} ({name})')
+            log.info(f'{key}: {str(data).strip()}')
         elif isinstance(data, list) and len(data) != 0:
-            log.info(f'{key}: {len(data)} ({name})')
+            log.info(f'{key}: {len(data)}')
             table = get_table_form(data)
             log.echo(str(table))
         elif isinstance(data, dict):
@@ -36,7 +37,7 @@ class Cli:
                 for k, v in data.items():
                     self.echo_handle(log, name=name, data=v, key=k)
             else:
-                log.info(f'{key}: 1 ({name})')
+                log.info(f'{key}: 1')
                 table = get_table_form(data, layout='vertical')
                 log.echo(str(table))
 
@@ -83,7 +84,7 @@ class Cli:
                     cls.log.root(rf'Start entering console mode [help¦show¦run¦quit]{" " * 10}')
                     cls.log.echo(f"\n    {cls.__info__.get('description', '暂无关于此漏洞的描述信息')}\n")
                     while True:
-                        keyword = input('[localhost \033[0;31m~\033[0m]# ')
+                        keyword = input(f'\r{150 * " "}\r[localhost \033[0;31m~\033[0m]# ')
                         if keyword in ['quit', 'exit']:
                             break
                         elif keyword in ['help', '?']:
@@ -128,8 +129,11 @@ class Cli:
                                         res = func(cls, *args)
                                     else:
                                         res = func(cls)
-                                    self.dataset = res
-                                    self.echo_handle(cls.log, name=cls.options.plugin, data=res)
+                                    if res:
+                                        self.dataset = res
+                                        self.echo_handle(cls.log, name=cls.options.plugin, data=res)
+                                    else:
+                                        cls.log.warn('')
                                 except Exception as e:
                                     cls.log.warn(e)
                                 # 暂停消息线程
