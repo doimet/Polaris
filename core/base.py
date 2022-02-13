@@ -113,14 +113,17 @@ class Logging(logging.Logger):
     def root(self, msg, *args, **kwargs):
         """ 消息输出 """
         if self.isEnabledFor(60):
-            self._log(60, "\r\033[0;34m[+]\033[0m {}".format(msg), args, **kwargs)
+            msg = str(msg)
+            sys.stdout.write('\r' + 100 * ' ' + '\r')
+            self._log(60, "\r\033[0;34m[+]\033[0m {}".format(msg + (100 - len(msg)) * ' '), args, **kwargs)
 
     def critical(self, msg, *args, **kwargs):
         """ 严重输出 调用会导致程序结束 """
 
         if self.isEnabledFor(70):
+            msg = str(msg)
             sys.stdout.write('\r' + 100 * ' ' + '\r')
-            self._log(70, "\r\033[0;31m[-]\033[0m {}".format(msg), args, **kwargs)
+            self._log(70, "\r\033[0;31m[-]\033[0m {}".format(msg + (100 - len(msg)) * ' '), args, **kwargs)
             sys.exit(1)
 
 

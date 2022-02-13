@@ -31,7 +31,7 @@ class Application:
     def setup(self):
         """ 判断dataset中是否有数据 有数据表示不是第一次运行 需要从dataset中提取数据当输入 """
         if self.dataset:
-            target_list = self.yield_target(self.dataset)
+            target_list = self.build_target(self.dataset)
             self.dataset = []
         else:
             target_list = self.options.pop('input')
@@ -56,9 +56,9 @@ class Application:
             plugin_info = plugin_obj.__info__
             inner_method = plugin_obj({}, {}, {}, None, {}).__method__
             support = '/'.join(inner_method)
-            status = '\033[0;31m✖ \033[0m' if (
+            status = '\033[0;31mDisable\033[0m' if (
                     file_name in self.config.keys() and self.config[file_name].get('enable', False)
-            ) else '\033[0;92m✔ \033[0m'
+            ) else '\033[0;92mEnable\033[0m'
             show_list.append(
                 [
                     {
@@ -108,7 +108,6 @@ class Application:
 
     def job_execute(self, target_tuple: tuple):
         """ 任务执行器 """
-
         depth = self.config['general']['depth']
         max_workers = self.config['general']['threads']
         task_list, result, cache, taskset = [], [], set(), [target_tuple]
@@ -134,7 +133,7 @@ class Application:
                 wait(task_list, return_when=ALL_COMPLETED)
                 for future in as_completed(task_list):
                     result.append(future.result())
-                taskset = self.yield_target(result)
+                taskset = self.build_target(result)
                 depth -= 1
         # result = list(chain(*list(filter(lambda x: x is not None, result))))
         result = self.final_handle(result)
@@ -153,7 +152,8 @@ class Application:
                 data.append({'网段信息': segment_list})
         return data
 
-    def yield_target(self, data):
+    def build_target(self, data):
+        """ 生成目标 """
         for subdomain in self.extract_data('subdomain', data, []):
             yield 'url', 'http://{}'.format(subdomain)
 
@@ -226,7 +226,6 @@ class Application:
             # options.update(self.options)
             # # 开始处理传入插件内的参数
             options = self.options
-            options['plugin'] = plugin_name
             # # 停止处理传入插件内的参数
             obj = plugin_object(
                 options,
@@ -299,17 +298,21 @@ class Application:
             file_stem, file_ext = Path(filename).stem, Path(filename).suffix
             if file_ext in ['.py', '.yml'] and not filename.startswith('_'):
                 if names:
-                    for name in names:
-                        if name[0] == '!' and file_stem in [name[1:] for name in names]:
+                    for plugin in names:
+                        if plugin[0] == '!' and file_stem in [plugin[1:] for plugin in names]:
                             continue
-                        elif name.startswith('@'):
-                            callback_func = name.strip('@')
-                            plugin_obj = self.get_plugin_object(os.path.join(path, filename))
+                        elif plugin.startswith('@'):
+                            callback_func = plugin.strip('@')
+                            plugin_obj = self.get_plugin_object(os.path.join(file_path, filename))
                             if callback_func not in dir(plugin_obj):
                                 continue
                             else:
-                                res.add((path, file_stem, file_ext))
-                        elif file_stem == name or is_exclude:
+                                res.add((file_path, file_stem, file_ext))
+                        elif plugin.startswith('%') and plugin.strip('%').lower() in file_stem.lower():
+                            res.add((file_path, file_stem, file_ext))
+                        elif file_stem.lower() == plugin.lower() or is_exclude:
+                            res.add((file_path, file_stem, file_ext))
+                        elif plugin.lower() in file_path.lower():
                             res.add((file_path, file_stem, file_ext))
                         else:
                             continue

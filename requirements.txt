@@ -33,3 +33,4 @@ signxml~=2.9.0
 python-dateutil~=2.8.2
 crypto~=1.4.1
 simhash~=2.0.0
+mmh3~=3.0.0

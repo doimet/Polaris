@@ -6,7 +6,7 @@ import csv
 def export_json(path, data):
     """ 输出json文件 """
     with open(path, "w", encoding='utf-8') as f:
-        json.dump(data, f, indent=4, ensure_ascii=False)
+        json.dump([_ for _ in data if _['content']], f, indent=4, ensure_ascii=False)
 
 
 def export_csv(path, data):

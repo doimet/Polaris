@@ -1,6 +1,7 @@
 # -*-* coding:UTF-8
 import os
 import re
+import mmh3
 import base64
 import hashlib
 from core.common import get_table_form
@@ -27,7 +28,10 @@ class Cli:
         """ 数据回显处理 """
 
         if isinstance(data, str) or isinstance(data, int):
-            log.info(f'{key}: {str(data).strip()}')
+            data = str(data).strip()
+            if data.count('\n') > 0:
+                data = '\n' + data
+            log.info(f'{key}: {data}')
         elif isinstance(data, list) and len(data) != 0:
             log.info(f'{key}: {len(data)}')
             table = get_table_form(data)
@@ -81,7 +85,7 @@ class Cli:
                         args = tuple([_['default'] for _ in kwargs.values()])
                         return func(cls, *args)
 
-                    cls.log.root(rf'Start entering console mode [help¦show¦run¦quit]{" " * 10}')
+                    cls.log.root(rf'Start entering console mode [help|show|run|quit]{" " * 10}')
                     cls.log.echo(f"\n    {cls.__info__.get('description', '暂无关于此漏洞的描述信息')}\n")
                     while True:
                         keyword = input(f'\r{150 * " "}\r[localhost \033[0;31m~\033[0m]# ')
@@ -96,6 +100,7 @@ class Cli:
                             data = [
                                 {
                                     'md5': 'MD5加密',
+                                    'mmh3': 'MMH3加密',
                                     'base64Encode': 'Base64编码',
                                     'base64Decode': 'Base64解码',
                                 }
@@ -160,11 +165,12 @@ class Cli:
                                         with open(match_value, encoding='utf-8-sig') as f:
                                             match_value = f.read()
                                     elif re.match(r'^http[s]://.*', match_value):
-                                        with cls.request('get', match_value) as r:
-                                            match_value = r.content
-
+                                        r = cls.request('get', match_value)
+                                        match_value = r.content
                                     if match_name == 'md5':
                                         cls.log.info(f'Result: {hashlib.md5(match_value.encode()).hexdigest()}')
+                                    elif match_name == 'mmh3':
+                                        cls.log.info(f'Result: {mmh3.hash(match_value)}')
                                     elif match_name == 'base64Encode':
                                         cls.log.info(f'Result: {base64.b64encode(match_value.encode()).decode()}')
                                     elif match_name == 'base64Decode':

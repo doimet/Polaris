@@ -39,23 +39,31 @@
     ![Image](docs/images/screenshort_02.png)
     可选命令: `collect`、`exploit`、`login`、`auxiliary`
 + 查看插件信息
-    ```shell script
-    python Cli.py {命令} --list
-    ```
-    ![Image](docs/images/screenshort_03.png)
-    ```shell script
-    python Cli.py {命令} --plugin '{插件}' --list
-    ```
-    ![Image](docs/images/screenshort_04.png)
-    ```shell script
-    python Cli.py {命令} --plugin '@{类型}' --list
-    ```
-    ![Image](docs/images/screenshort_05.png)
-    ```shell script
-    python Cli.py {命令} --plugin '!{插件}' --list
-    ```
-    ![Image](docs/images/screenshort_06.png)
-    可选类型: `ip`、`domain`、`subdomain`、`url`、`company`、`email`、`md5`等
+    + 列出所有插件
+        ```shell script
+        python Cli.py {命令} --list
+        ```
+        ![Image](docs/images/screenshort_03.png)
+    + 按名称筛选插件
+        ```shell script
+        python Cli.py {命令} --plugin '{插件}' --list
+        ```
+        ![Image](docs/images/screenshort_04.png)
+    + 按类型筛选插件
+        ```shell script
+        python Cli.py {命令} --plugin '@{类型}' --list
+        ```
+        ![Image](docs/images/screenshort_05.png)
+    + 排除指定插件
+        ```shell script
+        python Cli.py {命令} --plugin '!{插件}' --list
+        ```
+        ![Image](docs/images/screenshort_06.png)
+        可选类型: `ip`、`domain`、`subdomain`、`url`、`company`、`email`、`md5`等
+    + 模糊匹配插件
+        ```shell script
+        python Cli.py {命令} --plugin '%{插件}' --list
+        ```
 + 运行命令格式
     ```shell script
     python Cli.py --input {类型}:{目标/文件} {调用命令} {调用参数}
