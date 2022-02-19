@@ -1,6 +1,5 @@
 # -*-* coding:UTF-8
 import re
-
 import prettytable
 from itertools import chain
 from core.base import Interval

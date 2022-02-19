@@ -11,13 +11,13 @@ class Plugin(Base):
         "datetime": "2022-01-09"
     }
 
-    @cli.options('path', desc='进程导出文件路径(需执行命令tasklist /svc)', default='{self.target.value}')
-    @cli.options('path2', desc='杀软识别指纹路径', default=os.path.join('data', 'av.json'))
-    def file(self, path, path2) -> dict:
+    @cli.options('file', desc='进程导出文件路径(需执行命令tasklist /svc)', default='{self.target.value}')
+    @cli.options('path', desc='杀软识别指纹路径', default=os.path.join('data', 'av.json'))
+    def file(self, file, path) -> dict:
         av_list = []
-        with open(path, encoding='utf-16') as f:
+        with open(file, encoding='utf-8') as f:
             content = f.read()
-        with open(path2, encoding='utf-8') as f:
+        with open(path, encoding='utf-8') as f:
             av_dict = json.load(f)
             for name, value in av_dict.items():
                 for process in value['processes']:

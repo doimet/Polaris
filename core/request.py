@@ -62,6 +62,7 @@ class Request:
         self.headers = {
             'User-Agent': RandomUserAgent.get(),
         }
+        self.headers.update(config['network']['headers'] if 'network' in config.keys() else {})
         self.client = httpx.Client(verify=False)
         self.async_client = httpx.AsyncClient(verify=False)
         # DNSProxy([self.resolve_name], self.resolve_host)

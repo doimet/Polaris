@@ -322,7 +322,7 @@ class PluginBase(Request):
     def __decorate__(self):
         decorate = ''
         for k, v in self.__class__.__dict__.items():
-            if type(v).__name__ == 'function' and not k.startswith('__') and not k.startswith('custom'):
+            if type(v).__name__ == 'function' and not k.startswith('__'):
                 if v.__name__ == 'inner':
                     decorate = k
         return decorate

@@ -21,8 +21,8 @@ class Plugin(Base):
         "datetime": "2022-02-02"
     }
 
-    @cli.options('path', desc="data.mdb路径(该文件位于/storage/db/vmware-vmdir)", default='{self.target.value}')
-    @cli.options('ip', desc="IP地址", required=True)
+    @cli.options("file", desc="data.mdb路径(该文件位于/storage/db/vmware-vmdir)", default='{self.target.value}')
+    @cli.options("ip", desc="IP地址", required=True)
     def file(self, path, ip) -> dict:
         with open(path, 'rb') as f:
             content = f.read()

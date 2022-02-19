@@ -1,4 +1,5 @@
 # -*-* coding:UTF-8
+import functools
 import os
 import sys
 import time
@@ -6,6 +7,7 @@ import yaml
 import threading
 import importlib
 from pathlib import Path
+from core.request import Request
 from core.base import PluginBase, PluginObject, Logging, XrayPoc
 from core.common import get_table_form, merge_ip_segment
 from core.common import merge_same_data, keep_data_format
@@ -38,11 +40,12 @@ class Application:
         for target_tuple in target_list:
             self.log.root(f"Target: {target_tuple[1]}")
             threading.Thread(target=self.on_monitor, daemon=True).start()
-            if self.check_is_live(*target_tuple):
+            status, message = self.check_is_live(*target_tuple)
+            if status:
                 content = self.job_execute(target_tuple)
-                self.dataset.append({'root': target_tuple[1], 'content': content})
+                self.dataset.append({'root': target_tuple[1], 'content': {self.options['command']: content}})
             else:
-                self.log.error('the target cannot access')
+                self.log.error(message)
 
     def shows(self):
         """ 获取插件列表 """
@@ -54,24 +57,37 @@ class Application:
             plugin_obj = self.get_plugin_object(os.path.join(file_path, file_name + file_ext))
 
             plugin_info = plugin_obj.__info__
-            inner_method = plugin_obj({}, {}, {}, None, {}).__method__
-            support = '/'.join(inner_method)
+            plugin_inst = plugin_obj({}, {}, {}, None, {})
+            inner_method = plugin_inst.__method__
+            decorate_method = plugin_inst.__decorate__
+            support = []
+            for i in inner_method:
+                if i in decorate_method:
+                    support.append(i + '(console)')
+                else:
+                    support.append(i)
+            else:
+                if len(inner_method) == 1 and decorate_method and 'console' not in support[0]:
+                    support[0] += '(console)'
+
             status = '\033[0;31mDisable\033[0m' if (
                     file_name in self.config.keys() and self.config[file_name].get('enable', False)
             ) else '\033[0;92mEnable\033[0m'
             show_list.append(
                 [
                     {
-                        '名称': file_name,
+                        '插件': file_name,
+                        '名称': plugin_info['name'],
                         '描述': plugin_info['description'],
-                        '支持': support,
+                        '支持': ','.join(support),
                         '状态': status
                     },
                     {
-                        '名称': file_name,
+                        '插件': file_name,
                         '作者': plugin_info['author'],
+                        '名称': plugin_info['name'],
                         '描述': plugin_info['description'],
-                        '支持': support,
+                        '支持': ','.join(support),
                         '来源': ', '.join(plugin_info['references']) if isinstance(plugin_info['references'], list) else
                         plugin_info['references'],
                         '状态': status,
@@ -84,7 +100,7 @@ class Application:
         else:
             is_show_detail = False
 
-        plugin_list = sorted([_[is_show_detail] for _ in show_list], key=lambda keys: keys['名称'])
+        plugin_list = sorted([_[is_show_detail] for _ in show_list], key=lambda keys: keys['插件'])
         if len(plugin_list) == 0:
             self.log.root(f'Not found {self.options["command"]} plugin')
         else:
@@ -95,16 +111,13 @@ class Application:
     def save(self):
         """ 输出处理 """
         dirs, filename = os.path.split(self.options['output'])
-        if not os.path.exists(dirs):
+        if dirs and not os.path.exists(dirs):
             os.makedirs(dirs)
         file_name, file_ext = os.path.splitext(self.options['output'])
         output_object = importlib.import_module("core.output")
 
-        def callback_failure(path, data):
-            self.log.warn('Export file format not support, auto change json format')
-            getattr(output_object, 'export_json')(path.replace(file_ext, '.json'), data)
-
-        getattr(output_object, 'export_' + file_ext[1:], callback_failure)(self.options['output'], self.dataset)
+        callback = functools.partial(self.log.critical, 'export file format not support')
+        getattr(output_object, 'export_' + file_ext[1:], callback)(self.options['output'], self.dataset)
 
     def job_execute(self, target_tuple: tuple):
         """ 任务执行器 """
@@ -172,20 +185,52 @@ class Application:
                 self.extract_data(key, v, res)
         return res
 
-    @staticmethod
-    def check_is_live(_key, _value):
-        """ 检测目标存活 """
-        # if _key in ['ip', 'domain', 'subdomain', 'url']:
-        #     if _key == 'url':
-        #         _value = urllib.parse.urlparse(_value)
-        #         _value = _value.netloc
-        #
-        #     res = os.popen("ping -{} 1 {}".format('n' if platform.system() == 'Windows' else 'c', _value))
-        #     data = res.read()
-        #     res.close()
-        #     if "TTL" not in data:
-        #         return False
-        return True
+    def check_is_live(self, _key, _value):
+        """
+        检测目标指标:
+        1.检测目标是否存活
+        2.检测目标是否是蜜罐
+        """
+        if _key == 'url':
+            request = Request()
+            try:
+                r = request.request(method="get", url=_value, timeout=15)
+                if self.check_is_honeypot(r.text):
+                    return False, 'the target is honeypot'
+            except:
+                return False, 'the target cannot access'
+        return True, 'access normal'
+
+    def check_is_honeypot(self, content):
+        """ 简单蜜罐检测 后续需要优化 """
+        code_list = [
+            """
+windows--2017
+write = system,call,log,verbose,command,agent,user,originate
+www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
+},
+荣耀立方
+-->
+</p>
+</body></html>
+            """,
+            """
+WWW-Authenticate: Basic realm="NETGEAR DGN2200"
+            """,
+            """
+var TAB_CODE=9
+var DEL_CODE=46
+var BS_CODE=8
+            """,
+            """
+ <title>Openfire Admin Console</title>
+ <title>Openfire Console d'Administration: Configuration du Serveur</title>
+ <title>Openfire Setup</title>
+            """
+        ]
+        if any([True if _ in content else False for _ in code_list]):
+            return True
+        return False
 
     def has_command(self, command):
         plugin_list = self.get_plugin_list('plugins', self.options['plugin'])
@@ -195,21 +240,21 @@ class Application:
                 return True
         return False
 
-    def echo_handle(self, name=None, data=None, key='result'):
+    def echo_handle(self, data=None, key='result'):
         """ 数据回显处理 """
 
         if isinstance(data, str) or isinstance(data, int):
-            self.log.child(f'{key}: {str(data).strip()} ({name})')
+            self.log.child(f'{key}: {str(data).strip()}')
         elif isinstance(data, list) and len(data) != 0:
-            self.log.child(f'{key}: {len(data)} ({name})')
+            self.log.child(f'{key}: {len(data)}')
             table = get_table_form(data)
             self.log.child(str(table).replace('\n', '\n\033[0;34m | \033[0m '))
         elif isinstance(data, dict):
             if not all(map(lambda x: isinstance(x, str) or isinstance(x, int), data.values())):
                 for k, v in data.items():
-                    self.echo_handle(name=name, data=v, key=k)
+                    self.echo_handle(data=v, key=k)
             else:
-                self.log.child(f'{key}: 1 ({name})')
+                self.log.child(f'{key}: 1')
                 table = get_table_form(data, layout='vertical')
                 self.log.child(str(table).replace('\n', '\n\033[0;34m | \033[0m '))
 
@@ -218,12 +263,10 @@ class Application:
         thread_object = threading.current_thread()
         self.next_job = thread_object.name = plugin_name
         try:
-            # if plugin_name in self.config.keys():
-            #     if self.config[plugin_name].get('enable', False):
-            #         """ 指定插件时 判断插件是否被禁用 并打印提示 """
-            #         raise Exception(f'The plug-in is disabled')
-            #     options = self.config[plugin_name]
-            # options.update(self.options)
+            if plugin_name in self.config.keys():
+                if self.config[plugin_name].get('enable', False):
+                    """ 指定插件时 判断插件是否被禁用 并打印提示 """
+                    raise Exception(f'The plug-in is disabled')
             # # 开始处理传入插件内的参数
             options = self.options
             # # 停止处理传入插件内的参数
@@ -261,7 +304,8 @@ class Application:
             data = merge_same_data(worker.result(), 1, {})
             # 如进入控制台模式则需跳过此逻辑
             if not self.options['console']:
-                self.echo_handle(name=thread.name, data=data)
+                self.log.child(f"\033[0;31m~o(〃'▽'〃)o\033[0m: The following results ({thread.name})")
+                self.echo_handle(data=data)
 
     def on_monitor(self):
         """ 消息线程 """

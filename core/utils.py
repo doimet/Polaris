@@ -96,6 +96,20 @@ def build_login_dict(method=1, username='admin', password='admin'):
         raise Exception('login method error!')
 
 
+def string_split(value) -> list:
+    result = []
+    cut_list = str(value).split(',')
+    for one_cut in cut_list:
+        segment = one_cut.split('-')
+        if len(segment) == 1:
+            min_value = max_value = segment[0]
+        else:
+            min_value, max_value = segment
+        for one in range(int(min_value), int(max_value) + 1):
+            result.append(one)
+    return result
+
+
 def build_web_shell(lang='php') -> tuple:
     """ 生成WebShell """
     code, password = '', build_random_str(8)

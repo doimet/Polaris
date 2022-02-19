@@ -8,6 +8,7 @@ class Plugin(Base):
     __info__ = {
         "author": "doimet",
         "references": ["https://aiqicha.baidu.com"],
+        "name": "爱企查",
         "description": "爱企查企业信息查询",
         "datetime": "2022-01-26"
     }

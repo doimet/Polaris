@@ -15,17 +15,7 @@ class Plugin(Base):
     @cli.options('timeout', desc="连接超时时间", type=int, default=1)
     @cli.options('workers', desc="协程并发数量", type=int, default='{self.config.general.asyncio}')
     def ip(self, ip, port, timeout, workers):
-        port_list = []
-        cut_list = str(port).split(',')
-        for one_cut in cut_list:
-            segment = one_cut.split('-')
-            if len(segment) == 1:
-                min_value = max_value = segment[0]
-            else:
-                min_value, max_value = segment
-            for one in range(int(min_value), int(max_value) + 1):
-                port_list.append(one)
-
+        port_list = self.string_split(port)
         with self.async_pool(max_workers=workers) as execute:
             for port in port_list:
                 execute.submit(self.custom_task, timeout, ip, port)

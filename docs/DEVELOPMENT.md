@@ -112,6 +112,7 @@ class Plugin(Base):
     __info__ = {
         "author": "作者",
         "references": ["来源"],
+        "name": "插件名称",
         "description": "描述信息",
         "datetime": "日期"
     }
@@ -129,6 +130,7 @@ class Plugin(Base):
     __info__ = {
         "author": "作者",
         "references": ["来源"],
+        "name": "插件名称",
         "description": "描述信息",
         "datetime": "日期"
     }
@@ -138,7 +140,7 @@ class Plugin(Base):
         ...
     
     @cli.options('cmd', desc="执行命令", default="whoami")
-    def attack(self, cmd) -> dict:
+    def custom_attack(self, cmd) -> dict:
         """ 利用代码 """
         ...
 
@@ -153,6 +155,7 @@ class Plugin(Base):
     __info__ = {
         "author": "作者",
         "references": ["来源"],
+        "name": "插件名称",
         "description": "描述信息",
         "datetime": "日期"
     }
@@ -183,6 +186,7 @@ class Plugin(Base):
     __info__ = {
         "author": "作者",
         "references": ["来源"],
+        "name": "插件名称",
         "description": "描述信息",
         "datetime": "日期"
     }

@@ -34,5 +34,5 @@ class Plugin(Base):
             if result:
                 result = [{'icp': _[0], 'company': _[1], 'subdomain': _[2]} for _ in result]
                 return {
-                    'IcpList': [dict(t) for t in set([tuple(d.items()) for d in result])]
+                    'ICPList': [dict(t) for t in set([tuple(d.items()) for d in result])]
                 }

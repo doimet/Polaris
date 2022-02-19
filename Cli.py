@@ -34,7 +34,7 @@ def show_banner(func):
     def wrapper(options, processors):
         os.system('')
         print(f"""
-    \033[0;31mPolaris - 渗透测试框架 1.2.1\033[0m
+    \033[0;31mPolaris - 渗透测试框架 1.2.2\033[0m
 
  =# Author: 浮鱼
  =# Github: https://github.com/doimet/Polaris
@@ -90,7 +90,7 @@ def parse_input_param(ctx, param, value):
                 task_list.append((key, value))
         return task_list
     else:
-        click.echo('\033[0;31m[-]\033[0m Incorrect input syntax. PS: domain:example.com\n')
+        click.echo('\033[0;31m[-]\033[0m Incorrect input format. PS: domain:example.com\n')
         ctx.exit()
 
 
@@ -99,7 +99,12 @@ def parse_output_param(ctx, param, value):
     filename = time.strftime("%Y-%m-%d-%H-%M-%S-report.json", time.localtime())
     if not value:
         return os.path.join('output', filename)
-    elif os.path.isdir(value):
+    # 此处需要判断文件后缀名, 目前仅支持json、csv(不好用)的输出格式
+    file_name, file_ext = os.path.splitext(value)
+    if file_ext not in ['.json', '.csv', '.md']:
+        click.echo('\033[0;31m[-]\033[0m Only support output file format: json、csv、md\n')
+        ctx.exit()
+    if os.path.isdir(value):
         return os.path.join(value, filename)
     else:
         return value

@@ -7,11 +7,13 @@ class Plugin(Base):
     __info__ = {
         "author": "doimet",
         "references": ["https://www.zoomeye.org/"],
+        "name": "ZoomEye",
         "description": "ZoomEye网络空间引擎搜索",
         "datetime": "2022-01-28"
     }
 
-    @cli.options('mode', desc="可选模式:host,web,icon,domain,cert", choice=['host', 'web', 'icon', 'domain', 'cert'], default='host')
+    @cli.options('mode', desc="可选模式:host,web,icon,domain,cert", choice=['host', 'web', 'icon', 'domain', 'cert'],
+                 default='host')
     @cli.options('dork', desc="查询语法", default='{self.target.value}')
     @cli.options('limit', desc="限制条数", type=int, default=100)
     @cli.options('timeout', desc="请求超时时间", type=int, default=30)

@@ -47,7 +47,7 @@ class Plugin(Base):
     async def custom_task(self, url, timeout, distance, flag_sim, path):
         self.log.debug(f'start scan path: {path}')
         r = await self.async_http(method='get', url=urljoin(url, path), cache=True, timeout=timeout)
-        if r.status_code in [200, 500]:
+        if r.status_code in self.string_split('200-403,500-510'):
             text_sim = Simhash(re.sub("[\r|\n|\t| ]+", " ", r.text))
             if self.request_times > 15:
                 raise Exception('超过15次都访问了同一页面')
@@ -58,7 +58,12 @@ class Plugin(Base):
                 match = re.search('<title>(.*?)</title>', r.text, re.IGNORECASE)
                 title = match.group(1).strip() if match else '-'
                 self.log.info(f'found exist path: {path} <{r.status_code}>')
-                return {'相对路径': path, '网页标题': title, '响应大小': r.length, '状态码': r.status_code}
+                return {
+                    '相对路径': path,
+                    '网页标题': title,
+                    '响应大小': r.length,
+                    '状态码': r.status_code
+                }
             else:
                 self.request_times += 1
         elif r.status_code in [512, 418]:

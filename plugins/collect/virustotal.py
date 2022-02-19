@@ -5,6 +5,7 @@ class Plugin(Base):
     __info__ = {
         "author": "doimet",
         "references": ["https://www.virustotal.com"],
+        "name": "virustotal",
         "description": "virustotal查询",
         "datetime": "2022-01-06"
     }

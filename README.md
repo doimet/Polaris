@@ -1,4 +1,4 @@
-<h1 align="center">Polaris</h1>
+<h1 align="center">🌟Polaris</h1>
 <h1 align="center">
 
 [![Python](https://img.shields.io/badge/python-3.6+-blue.svg)](https://www.python.org/)

@@ -11,7 +11,7 @@ class Plugin(Base):
         "datetime": "2022-01-02"
     }
 
-    @cli.options('ip', desc="设置输入目标", default='{self.input.value}')
+    @cli.options('ip', desc="设置输入目标", default='{self.target.value}')
     @cli.options('port', desc="设置目标端口", type=int, default=21)
     @cli.options('method', desc="口令爆破模式 1:单点模式 2:交叉模式", type=int, default=2)
     @cli.options('username', desc="用户名称或字典文件", default=os.path.join('data', 'ftp_username.dict'))
