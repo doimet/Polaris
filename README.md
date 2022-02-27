@@ -126,7 +126,7 @@ python Cli.py --input md5:1a79a4d60de6718e8e5b326e338ae533 tools --plugin md5
 ```
 + 识别杀软
 ```shell script
-python Cli.py --input file:tasklist.txt tools --plugin whatav
+python Cli.py --input file:tasklist.txt tools --plugin what_av
 ```
 
 ### 命令联动

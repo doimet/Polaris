@@ -8,7 +8,7 @@ import threading
 import importlib
 from pathlib import Path
 from core.request import Request
-from core.base import PluginBase, PluginObject, Logging, XrayPoc
+from core.base import PluginBase, PluginObject, Logging, YamlPoc
 from core.common import get_table_form, merge_ip_segment
 from core.common import merge_same_data, keep_data_format
 from concurrent.futures import ThreadPoolExecutor, as_completed, wait, ALL_COMPLETED, FIRST_EXCEPTION
@@ -37,13 +37,15 @@ class Application:
             self.dataset = []
         else:
             target_list = self.options.pop('input')
+
         for target_tuple in target_list:
             self.log.root(f"Target: {target_tuple[1]}")
             threading.Thread(target=self.on_monitor, daemon=True).start()
             status, message = self.check_is_live(*target_tuple)
             if status:
                 content = self.job_execute(target_tuple)
-                self.dataset.append({'root': target_tuple[1], 'content': {self.options['command']: content}})
+                if content:
+                    self.dataset.append({'root': target_tuple[1], 'content': {self.options['command']: content}})
             else:
                 self.log.error(message)
 
@@ -53,13 +55,15 @@ class Application:
         show_list = []
 
         base_path = os.path.join('plugins', self.options['command'])
-        for file_path, file_name, file_ext in self.get_plugin_list(base_path, self.options['plugin']):
+        attribute = self.options['input'][0][0] if self.options['input'] else None
+
+        for file_path, file_name, file_ext in self.get_plugin_list(base_path, self.options['plugin'], attribute):
             plugin_obj = self.get_plugin_object(os.path.join(file_path, file_name + file_ext))
 
             plugin_info = plugin_obj.__info__
             plugin_inst = plugin_obj({}, {}, {}, None, {})
             inner_method = plugin_inst.__method__
-            decorate_method = plugin_inst.__decorate__
+            decorate_method = plugin_inst.__decorate__['main']
             support = []
             for i in inner_method:
                 if i in decorate_method:
@@ -110,17 +114,19 @@ class Application:
 
     def save(self):
         """ 输出处理 """
-        dirs, filename = os.path.split(self.options['output'])
-        if dirs and not os.path.exists(dirs):
-            os.makedirs(dirs)
-        file_name, file_ext = os.path.splitext(self.options['output'])
-        output_object = importlib.import_module("core.output")
+        if self.dataset:
+            dirs, filename = os.path.split(self.options['output'])
+            if dirs and not os.path.exists(dirs):
+                os.makedirs(dirs)
+            file_name, file_ext = os.path.splitext(self.options['output'])
+            output_object = importlib.import_module("core.output")
 
-        callback = functools.partial(self.log.critical, 'export file format not support')
-        getattr(output_object, 'export_' + file_ext[1:], callback)(self.options['output'], self.dataset)
+            callback = functools.partial(self.log.critical, 'export file format not support')
+            getattr(output_object, 'export_' + file_ext[1:], callback)(self.options['output'], self.dataset)
 
     def job_execute(self, target_tuple: tuple):
         """ 任务执行器 """
+
         depth = self.config['general']['depth']
         max_workers = self.config['general']['threads']
         task_list, result, cache, taskset = [], [], set(), [target_tuple]
@@ -129,8 +135,13 @@ class Application:
                 for target_tuple in taskset:
                     if target_tuple in cache:
                         continue
+
                     base_path = os.path.join('plugins', self.options['command'])
-                    for file_path, file_name, file_ext in self.get_plugin_list(base_path, self.options['plugin']):
+                    for file_path, file_name, file_ext in self.get_plugin_list(
+                            base_path,
+                            self.options['plugin'],
+                            target_tuple[0]
+                    ):
                         plugin_obj = self.get_plugin_object(os.path.join(file_path, file_name + file_ext))
                         if target_tuple[0] not in dir(plugin_obj):
                             continue
@@ -192,12 +203,12 @@ class Application:
         2.检测目标是否是蜜罐
         """
         if _key == 'url':
-            request = Request()
+            request = Request({}, {})
             try:
-                r = request.request(method="get", url=_value, timeout=15)
+                r = request.request(method="get", url=_value, timeout=7)
                 if self.check_is_honeypot(r.text):
                     return False, 'the target is honeypot'
-            except:
+            except Exception as e:
                 return False, 'the target cannot access'
         return True, 'access normal'
 
@@ -232,29 +243,30 @@ var BS_CODE=8
             return True
         return False
 
-    def has_command(self, command):
-        plugin_list = self.get_plugin_list('plugins', self.options['plugin'])
+    def has_attribute(self, attribute):
+        plugin_list = self.get_plugin_list('plugins', self.options['plugin'], attribute)
         for file_path, file_name, file_ext in plugin_list:
             plugin_obj = self.get_plugin_object(os.path.join(file_path, file_name + file_ext))
-            if command in dir(plugin_obj):
+            if attribute in dir(plugin_obj):
                 return True
         return False
 
-    def echo_handle(self, data=None, key='result'):
+    def echo_handle(self, name, data=None, key='result'):
         """ 数据回显处理 """
-
+        name = name.replace('((', '(').replace('))', ')')
         if isinstance(data, str) or isinstance(data, int):
-            self.log.child(f'{key}: {str(data).strip()}')
+            self.log.child(f'{key}: {str(data).strip()} {name}')
         elif isinstance(data, list) and len(data) != 0:
-            self.log.child(f'{key}: {len(data)}')
+            self.log.child(f'{key}: {len(data)} {name}')
             table = get_table_form(data)
             self.log.child(str(table).replace('\n', '\n\033[0;34m | \033[0m '))
         elif isinstance(data, dict):
             if not all(map(lambda x: isinstance(x, str) or isinstance(x, int), data.values())):
-                for k, v in data.items():
-                    self.echo_handle(data=v, key=k)
+                for n, (k, v) in enumerate(data.items()):
+                    name = f'({name})' if n == 0 else ''
+                    self.echo_handle(name=name, data=v, key=k)
             else:
-                self.log.child(f'{key}: 1')
+                self.log.child(f'{key}: 1 {name}')
                 table = get_table_form(data, layout='vertical')
                 self.log.child(str(table).replace('\n', '\n\033[0;34m | \033[0m '))
 
@@ -283,7 +295,7 @@ var BS_CODE=8
             if self.options.get('console', False):
                 # 暂停消息线程
                 self.event.clear()
-                call_func_name = obj.__decorate__
+                call_func_name = obj.__decorate__['main']
                 if call_func_name:
                     data = getattr(obj, call_func_name)()
                 else:
@@ -304,8 +316,7 @@ var BS_CODE=8
             data = merge_same_data(worker.result(), 1, {})
             # 如进入控制台模式则需跳过此逻辑
             if not self.options['console']:
-                self.log.child(f"\033[0;31m~o(〃'▽'〃)o\033[0m: The following results ({thread.name})")
-                self.echo_handle(data=data)
+                self.echo_handle(name=thread.name, data=data)
 
     def on_monitor(self):
         """ 消息线程 """
@@ -333,7 +344,7 @@ var BS_CODE=8
             for filename in filenames:
                 yield root, filename
 
-    def get_plugin_list(self, path: str, names: tuple):
+    def get_plugin_list(self, path: str, names: tuple, attribute=None):
         """ 获取插件列表 """
         is_exclude = all([True if _[0] == '!' else False for _ in names])  # 过滤插件前置判断
 
@@ -341,13 +352,15 @@ var BS_CODE=8
         for file_path, filename in self.list_path_file(path):
             file_stem, file_ext = Path(filename).stem, Path(filename).suffix
             if file_ext in ['.py', '.yml'] and not filename.startswith('_'):
-                if names:
+                plugin_obj = self.get_plugin_object(os.path.join(file_path, filename))
+                if attribute and attribute not in dir(plugin_obj):
+                    continue
+                elif names:
                     for plugin in names:
                         if plugin[0] == '!' and file_stem in [plugin[1:] for plugin in names]:
                             continue
                         elif plugin.startswith('@'):
                             callback_func = plugin.strip('@')
-                            plugin_obj = self.get_plugin_object(os.path.join(file_path, filename))
                             if callback_func not in dir(plugin_obj):
                                 continue
                             else:
@@ -399,7 +412,7 @@ var BS_CODE=8
         """
         plugin_object = self.build_plugin_object()
         if file_path.endswith('.yml'):
-            plugin = XrayPoc
+            plugin = YamlPoc
             with open(file_path, encoding='utf8') as f:
                 content = yaml.load(f, Loader=yaml.FullLoader)
             plugin.__info__ = {

@@ -87,7 +87,8 @@ class Logging(logging.Logger):
             else:
                 shape = '\r\033[0;34m | \033[0m'
                 msg = f'\033[0;33m{msg}\033[0m'
-            self._log(30, "{} {}".format(shape, msg + (100 - len(msg)) * ' '), args, **kwargs)
+            # args置空 防止交互异常 日志打印报错信息
+            self._log(30, "{} {}".format(shape, msg + (100 - len(msg)) * ' '), (), **kwargs)
 
     def error(self, msg, *args, **kwargs):
         """ 错误输出 """
@@ -135,7 +136,7 @@ class EchoQueryExecute:
         self.private_key = rsa.exportKey()
         self.secret = random_str
         self.correlation_id = random_str[:20]
-        self.session = Request()
+        self.session = Request({}, {})
         self.result_list = []
         self.create()
 
@@ -238,7 +239,7 @@ class AsyncioExecute(object):
         self._all_task = []
         self._new_loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self._new_loop)
-        self._lock = asyncio.Semaphore(max_workers)
+        self.lock = asyncio.Semaphore(max_workers)
         self.loop = asyncio.get_event_loop()
 
     def __enter__(self):
@@ -254,7 +255,7 @@ class AsyncioExecute(object):
         self._all_task.append(task)
 
     async def work(self, func, args):
-        async with self._lock:
+        async with self.lock:
             try:
                 res = await functools.partial(func, *args)()
                 return res
@@ -314,21 +315,34 @@ class PluginBase(Request):
         method = []
         decorated_func = ''
         for k, v in self.__class__.__dict__.items():
-            if type(v).__name__ == 'function' and not k.startswith('__') and not k.startswith('custom'):
+            if (
+                    type(v).__name__ == 'function' and
+                    not k.startswith('__') and
+                    not k.startswith('custom') and
+                    'Cli.command' not in str(v)
+            ):
                 method.append(k)
         return method
 
     @property
     def __decorate__(self):
-        decorate = ''
+        decorate = {'main': '', 'alias': []}
         for k, v in self.__class__.__dict__.items():
-            if type(v).__name__ == 'function' and not k.startswith('__'):
-                if v.__name__ == 'inner':
-                    decorate = k
+            if 'Cli.command' in str(v):
+                decorate['alias'].append(k)
+            elif 'Cli.options' in str(v):
+                decorate['main'] = k
+        # if len(decorate['main']) > 1:
+        #     raise Exception(f'found cli decorate not unique ({",".format(decorate["main"])})')
+        # else:
+        #     decorate['main'] = decorate['main'][0]
+            # if type(v).__name__ == 'function' and not k.startswith('__'):
+            #     if v.__name__ == 'inner':
+            #         decorate = k
         return decorate
 
 
-class XrayPoc(PluginBase):
+class YamlPoc(PluginBase):
     """ xray poc模板 """
     __vars__ = {}
     __rule__ = {}

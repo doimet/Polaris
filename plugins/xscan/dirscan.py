@@ -27,14 +27,12 @@ class Plugin(Base):
 
     @cli.options('url', desc="扫描目标地址", default='{self.target.value}')
     @cli.options('extension', desc="指定后缀", choice=['asp', 'jsp', 'php', 'aspx', '*'], default='*')
-    @cli.options('dict_path', desc="目录字典路径", default=os.path.join('data', 'path.dict'))
     @cli.options('timeout', desc="连接超时时间", type=int, default=3)
-    @cli.options('workers', desc="协程并发数量", type=int, default='{self.config.general.asyncio}')
-    def url(self, url, extension, dict_path, timeout, workers) -> dict:
+    def url(self, url, extension, timeout) -> dict:
         distance, flag_sim = self.custom_request_test(url)
-        with open(dict_path, encoding='utf-8') as f:
+        with open(os.path.join('data', 'path.dict'), encoding='utf-8') as f:
             path_list = [_.strip() for _ in f]
-        with self.async_pool(max_workers=workers) as execute:
+        with self.async_pool() as execute:
             for path in path_list:
                 path = path.strip().replace('%DOMAIN%', urlparse(url).netloc)
                 for extend in [

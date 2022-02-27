@@ -11,7 +11,7 @@ class Plugin(Base):
     }
 
     def domain(self) -> dict:
-        with self.async_pool(max_workers=self.config.general.asyncio, threshold=self.threshold) as execute:
+        with self.async_pool() as execute:
             for url in [
                 f'http://{self.target.value}',
                 f'http://www.{self.target.value}',

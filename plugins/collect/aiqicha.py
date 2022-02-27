@@ -13,11 +13,10 @@ class Plugin(Base):
         "datetime": "2022-01-26"
     }
 
-    @cli.options('company', desc="设置输入目标", default='{self.target.value}')
+    @cli.options('input', desc="设置输入目标", default='{self.target.value}')
     @cli.options('ua', desc="设置User-Agent", default='{self.config.aiqicha.ua}')
     @cli.options('cookies', desc="认证cookie", default='{self.config.aiqicha.cookie}')
-    @cli.options('workers', desc="协程并发数量", type=int, default='{self.config.general.asyncio}')
-    def company(self, company, ua, cookies, workers) -> dict:
+    def company(self, company, ua, cookies) -> dict:
         if not cookies or not ua:
             raise Exception('missing cookies or ua parameter')
         self.log.debug(f'start collect company base info')
@@ -37,7 +36,7 @@ class Plugin(Base):
             data = json.loads(match.group(1))
             if data:
                 pid = data[0]['pid']
-                with self.async_pool(max_workers=workers) as execute:
+                with self.async_pool() as execute:
                     execute.submit(self.custom_collect_base_info, pid)
                     execute.submit(self.custom_collect_app_info, pid)
                     execute.submit(self.custom_collect_holds_info, pid)

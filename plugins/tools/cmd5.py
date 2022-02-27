@@ -9,12 +9,12 @@ class Plugin(Base):
         "datetime": "2021-12-27"
     }
 
-    @cli.options('hash', desc='需要解密的hash', default='{self.target.value}')
-    def md5(self, _hash) -> dict:
+    @cli.options('input', desc='需要解密的hash', default='{self.target.value}')
+    def md5(self, _input) -> dict:
         r = self.request(
             method='get',
             url='https://www.cmd5.com/api.ashx',
-            params={'email': self.config.cmd5.email, 'key': self.config.cmd5.key, 'hash': _hash}
+            params={'email': self.config.cmd5.email, 'key': self.config.cmd5.key, 'hash': _input}
         )
         if r.status_code == 200:
             response = r.text
@@ -34,3 +34,11 @@ class Plugin(Base):
             return {
                 'MD5明文': response
             }
+
+    @cli.command
+    def demo(self, name):
+        print(name)
+
+    @cli.command
+    def test(self):
+        print('hello world1')

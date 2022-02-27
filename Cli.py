@@ -11,6 +11,7 @@ import warnings
 from IPy import IP
 from core.app import Application
 
+os.system('')
 warnings.filterwarnings("ignore")
 
 
@@ -32,9 +33,8 @@ def show_banner(func):
     """ 打印banner """
 
     def wrapper(options, processors):
-        os.system('')
         print(f"""
-    \033[0;31mPolaris - 渗透测试框架 1.2.2\033[0m
+    \033[0;31mPolaris - 渗透测试框架 1.2.3\033[0m
 
  =# Author: 浮鱼
  =# Github: https://github.com/doimet/Polaris
@@ -66,7 +66,7 @@ def parse_input_param(ctx, param, value):
     """ 解析输入参数 """
     if not value:
         return
-    match = re.match(rf"^([a-zA-Z]+)[=|: ]([\w\S]+)$", value)
+    match = re.match(rf"^([\w]+)[=|: ]([\w\S]+)$", value)
     if match:
         task_list, key, value = [], match.group(1), match.group(2)
         if os.path.isfile(value):
@@ -78,20 +78,19 @@ def parse_input_param(ctx, param, value):
         else:
             value_list = [value]
         for value in value_list:
-            # match = re.match(rf"^([a-zA-Z]+)[=|: ]([\w\S:]+)$", value)
-            # if match:
-            #     print(match.group(1), match.group(2))
-            #     key, value = match.group(1), match.group(2)
             if key == 'ip':
-                ip_list = IP(value, make_net=True)
-                for ip in ip_list:
-                    task_list.append(('ip', str(ip)))
+                try:
+                    ip_list = IP(value, make_net=True)
+                    for ip in ip_list:
+                        task_list.append(('ip', str(ip)))
+                except:
+                    break
             else:
                 task_list.append((key, value))
-        return task_list
-    else:
-        click.echo('\033[0;31m[-]\033[0m Incorrect input format. PS: domain:example.com\n')
-        ctx.exit()
+        else:
+            return task_list
+    click.echo('\033[0;31m[-]\033[0m Incorrect input format. PS: domain:example.com')
+    ctx.exit()
 
 
 def parse_output_param(ctx, param, value):
@@ -99,10 +98,10 @@ def parse_output_param(ctx, param, value):
     filename = time.strftime("%Y-%m-%d-%H-%M-%S-report.json", time.localtime())
     if not value:
         return os.path.join('output', filename)
-    # 此处需要判断文件后缀名, 目前仅支持json、csv(不好用)的输出格式
+    # 此处需要判断文件后缀名, 目前仅支持json、md的输出格式
     file_name, file_ext = os.path.splitext(value)
-    if file_ext not in ['.json', '.csv', '.md']:
-        click.echo('\033[0;31m[-]\033[0m Only support output file format: json、csv、md\n')
+    if file_ext not in ['.json', '.md']:
+        click.echo('\033[0;31m[-]\033[0m Only support output file format: json、md\n')
         ctx.exit()
     if os.path.isdir(value):
         return os.path.join(value, filename)

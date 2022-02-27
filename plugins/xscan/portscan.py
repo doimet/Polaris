@@ -13,10 +13,9 @@ class Plugin(Base):
     @cli.options('ip', desc="扫描目标地址", default='{self.target.value}')
     @cli.options('port', desc="扫描开放端口", default='21-23, 25, 53, 80, 135, 139, 143, 161, 389, 443, 445, 512-514,873, 1080, 1090, 1099, 1352, 1433, 1521, 2049, 2100, 2181, 2375, 3000, 3306, 3389, 4000, 4848, 5000, 5432, 5632, 5900, 5984, 6379, 7001, 7002, 8000-9000, 9000-9090, 9200, 9300, 11211, 19121, 19530, 27017, 21018, 28017,50000, 50050, 50070')
     @cli.options('timeout', desc="连接超时时间", type=int, default=1)
-    @cli.options('workers', desc="协程并发数量", type=int, default='{self.config.general.asyncio}')
-    def ip(self, ip, port, timeout, workers):
+    def ip(self, ip, port, timeout):
         port_list = self.string_split(port)
-        with self.async_pool(max_workers=workers) as execute:
+        with self.async_pool() as execute:
             for port in port_list:
                 execute.submit(self.custom_task, timeout, ip, port)
             return {'PortList': execute.result()}

@@ -17,9 +17,8 @@ class Plugin(Base):
     @cli.options('username', desc="用户名称或字典文件", default=os.path.join('data', 'redis_username.dict'))
     @cli.options('password', desc="用户密码或字典文件", default=os.path.join('data', 'redis_password.dict'))
     @cli.options('timeout', desc="连接超时时间", type=int, default=3)
-    @cli.options('workers', desc="协程并发数量", type=int, default='{self.config.general.asyncio}')
-    def ip(self, ip, port, method, username, password, timeout, workers) -> dict:
-        with self.async_pool(max_workers=workers) as execute:
+    def ip(self, ip, port, method, username, password, timeout) -> dict:
+        with self.async_pool() as execute:
             for u, p in self.build_login_dict(
                     method=method,
                     username=username,
