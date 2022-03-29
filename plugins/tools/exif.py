@@ -8,10 +8,9 @@ class Plugin(Base):
         "author": "doimet",
         "references": ["-"],
         "description": "获取图片中隐藏的信息",
-        "datetime": "2021-12-31"
     }
 
-    @cli.options('path', desc='图片路径', default='{self.target.value}')
+    @cli.options('path', description='图片路径', default='{self.target.value}')
     def file(self, path) -> dict:
         with open(path, 'rb') as f:
             exif_dict = exifread.process_file(f)

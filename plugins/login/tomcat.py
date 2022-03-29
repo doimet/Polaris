@@ -9,14 +9,13 @@ class Plugin(Base):
         "author": "doimet",
         "references": ["-"],
         "description": "tomcat口令破解",
-        "datetime": "2021-12-31"
     }
 
-    @cli.options('input', desc="设置输入目标", default='{self.target.value}')
-    @cli.options('method', desc="口令爆破模式 1:单点模式 2:交叉模式", type=int, default=2)
-    @cli.options('username', desc="用户名称或字典文件", default=os.path.join('data', 'tomcat_username.dict'))
-    @cli.options('password', desc="用户密码或字典文件", default=os.path.join('data', 'tomcat_password.dict'))
-    @cli.options('timeout', desc="连接超时时间", type=int, default=3)
+    @cli.options('input', description="设置输入目标", default='{self.target.value}')
+    @cli.options('method', description="口令爆破模式 1:单点模式 2:交叉模式", type=int, default=2)
+    @cli.options('username', description="用户名称或字典文件", default=os.path.join('data', 'tomcat_username.dict'))
+    @cli.options('password', description="用户密码或字典文件", default=os.path.join('data', 'tomcat_password.dict'))
+    @cli.options('timeout', description="连接超时时间", type=int, default=3)
     def url(self, url, method, username, password, timeout) -> dict:
         with self.async_pool() as execute:
             for u, p in self.build_login_dict(

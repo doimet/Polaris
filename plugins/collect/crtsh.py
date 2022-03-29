@@ -7,7 +7,6 @@ class Plugin(Base):
         "author": "doimet",
         "references": ["https://crt.sh"],
         "description": "证书查询子域名",
-        "datetime": "2021-12-27"
     }
 
     def domain(self) -> dict:

@@ -7,7 +7,6 @@ class Plugin(Base):
         "author": "doimet",
         "references": ["http://www.sitedossier.com"],
         "description": "sitedossier查询",
-        "datetime": "2022-01-01"
     }
 
     def domain(self) -> dict:

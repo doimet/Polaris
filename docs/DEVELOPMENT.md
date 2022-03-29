@@ -7,6 +7,8 @@
 + `log`: 
   + `log.debug`: 用于输出调式信息
   + `log.info`: 用于输出普通信息
+  + `log.success`: 用于输出成功信息
+  + `log.failure`: 用于输出失败信息
   + `log.warn`: 用于输出警告信息
   + `log.error`: 用于输出错误信息
 + `async_pool`: 用于创建异步连接池(上下文管理)
@@ -109,17 +111,20 @@
   返回对waf的判断True or False
   ```
 ## 内置装饰器
++ `cli.params`: 类属性, 用户获取扩展参数
 + `cli.options`: 类方法装饰器, 将方法扩展成可交互模式(使用--console参数调用)
   ```
-  cli.options(parmas: str, desc: str, type, required, default, choice)
+  cli.options(parmas: str, description: str, type, required, default, choice)
   parmas: 参数名称
-  desc: 参数描述信息
+  description: 参数描述信息
   type: 参数值类型, 可选: str、int、float、bool
   required: 参数是否必须, bool类型
   default: 参数默认值
   choice: 参数可选值, list类型
   ``` 
 + `cli.command`: 类方法装饰器, 用于自定义命令
+  cli.command(description: str)
+  description: 描述信息
 
 ## 插件模板
 ### 模板一
@@ -158,7 +163,7 @@ class Plugin(Base):
         """ 验证代码 """
         ...
     
-    @cli.options('cmd', desc="执行命令", default="whoami")
+    @cli.options('cmd', description="执行的命令", default="whoami")
     def custom_attack(self, cmd) -> dict:
         """ 利用代码 """
         ...
@@ -179,12 +184,12 @@ class Plugin(Base):
         "datetime": "日期"
     }
     
-    @cli.options('ip', desc="设置输入目标", default='{self.target.value}')
-    @cli.options('port', desc="设置目标端口", type=int, default=3306)
-    @cli.options('method', desc="口令爆破模式 1:单点模式 2:交叉模式", type=int, default=2)
-    @cli.options('username', desc="用户账号或字典文件", default=os.path.join('data', 'mysql_username.dict'))
-    @cli.options('password', desc="用户密码或字典文件", default=os.path.join('data', 'mysql_password.dict'))
-    @cli.options('timeout', desc="连接超时时间", type=int, default=5)
+    @cli.options('ip', description="设置输入目标", default='{self.target.value}')
+    @cli.options('port', description="设置目标端口", type=int, default=3306)
+    @cli.options('method', description="口令爆破模式 1:单点模式 2:交叉模式", type=int, default=2)
+    @cli.options('username', description="用户账号或字典文件", default=os.path.join('data', 'mysql_username.dict'))
+    @cli.options('password', description="用户密码或字典文件", default=os.path.join('data', 'mysql_password.dict'))
+    @cli.options('timeout', description="连接超时时间", type=int, default=5)
     def ip(self, ip, port, method, username, password, timeout) -> dict:
         with self.async_pool() as execute:
             for u, p in self.build_login_dict(method=method, username=username, password=password):

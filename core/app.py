@@ -61,7 +61,7 @@ class Application:
             plugin_obj = self.get_plugin_object(os.path.join(file_path, file_name + file_ext))
 
             plugin_info = plugin_obj.__info__
-            plugin_inst = plugin_obj({}, {}, {}, None, {})
+            plugin_inst = plugin_obj(file_name, {}, {}, {}, None, {})
             inner_method = plugin_inst.__method__
             decorate_method = plugin_inst.__decorate__['main']
             support = []
@@ -279,10 +279,11 @@ var BS_CODE=8
                 if self.config[plugin_name].get('enable', False):
                     """ 指定插件时 判断插件是否被禁用 并打印提示 """
                     raise Exception(f'The plug-in is disabled')
-            # # 开始处理传入插件内的参数
+            # 开始处理传入插件内的参数
             options = self.options
-            # # 停止处理传入插件内的参数
+            # 停止处理传入插件内的参数
             obj = plugin_object(
+                plugin_name,
                 options,
                 self.config,
                 {

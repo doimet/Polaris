@@ -7,12 +7,11 @@ class Plugin(Base):
         "author": "doimet",
         "references": ["-"],
         "description": "memcache服务口令破解",
-        "datetime": "2022-01-02"
     }
 
-    @cli.options('ip', desc="设置输入目标", default='{self.target.value}')
-    @cli.options('port', desc="设置目标端口", type=int, default=11211)
-    @cli.options('timeout', desc="连接超时时间", type=int, default=3)
+    @cli.options('ip', description="设置输入目标", default='{self.target.value}')
+    @cli.options('port', description="设置目标端口", type=int, default=11211)
+    @cli.options('timeout', description="连接超时时间", type=int, default=3)
     def ip(self, ip, port, timeout) -> dict:
         conn = Client(
             server=(ip, port),

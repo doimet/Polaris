@@ -76,6 +76,24 @@ class Logging(logging.Logger):
             shape = '\r\033[0;34m[i]\033[0m' if self.is_console_mode else '\r\033[0;34m | \033[0m'
             self._log(20, "{} {}".format(shape, msg + (100 - len(msg)) * ' '), args, **kwargs)
 
+    def success(self, msg, *args, **kwargs):
+        """ 成功输出 """
+
+        if self.isEnabledFor(25):
+            msg = str(msg)
+            sys.stdout.write('\r' + 100 * ' ' + '\r')
+            shape = '\r\033[0;32m[+]\033[0m' if self.is_console_mode else '\r\033[0;34m | \033[0m'
+            self._log(25, "{} {}".format(shape, msg + (100 - len(msg)) * ' '), args, **kwargs)
+
+    def failure(self, msg, *args, **kwargs):
+        """ 失败输出 """
+
+        if self.isEnabledFor(25):
+            msg = str(msg)
+            sys.stdout.write('\r' + 100 * ' ' + '\r')
+            shape = '\r\033[0;31m[-]\033[0m' if self.is_console_mode else '\r\033[0;34m | \033[0m'
+            self._log(25, "{} {}".format(shape, msg + (100 - len(msg)) * ' '), args, **kwargs)
+
     def warn(self, msg, *args, **kwargs):
         """ 异常输出 """
 
@@ -293,7 +311,8 @@ class PluginBase(Request):
         "datetime": "-"
     }
 
-    def __init__(self, options, config, target, event, threshold):
+    def __init__(self, name, options, config, target, event, threshold):
+        self.name = name
         self.config = DictObject(config)
         self.target = DictObject(target)
         self.options = DictObject(options)
@@ -332,13 +351,6 @@ class PluginBase(Request):
                 decorate['alias'].append(k)
             elif 'Cli.options' in str(v):
                 decorate['main'] = k
-        # if len(decorate['main']) > 1:
-        #     raise Exception(f'found cli decorate not unique ({",".format(decorate["main"])})')
-        # else:
-        #     decorate['main'] = decorate['main'][0]
-            # if type(v).__name__ == 'function' and not k.startswith('__'):
-            #     if v.__name__ == 'inner':
-            #         decorate = k
         return decorate
 
 

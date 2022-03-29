@@ -7,15 +7,7 @@
 </h1>
 
 # 项目简介
-这是一款集信息收集、漏洞利用、漏洞爆破等功能的一体化渗透测试框架   
-
-它的优点:
-- 兼容XRay语法规则
-- 可从本地文件加载目标
-- 各模块即可单独调用，也可以自由组合
-- 插件提供命令交互接口、异步方法调用...
-- 线程异步可控
-- 界面美观舒适
+一个美观舒适的辅助渗透测试框架(完善中)
 
 # 使用帮助
 
@@ -96,13 +88,6 @@
     python Cli.py --input company:北京奇虎科技有限公司 collect --plugin aiqicha
     ```
     ![Image](docs/images/screenshort_09.png)
-
-### 扫描功能
-
-+ 端口扫描
-    ```shell script
-    python Cli.py --input ip:x.x.x.x xscan -p portscan
-    ```
   
 ### 漏洞利用
 ```shell script
@@ -111,23 +96,6 @@ python Cli.py --input url:http://example.com exploit --plugin CVE-2021-22205
 python Cli.py --input url:http://example.com exploit --plugin CVE-2021-22205 --console
 ```
 指定`console`参数可进入交互模式
-### 口令爆破
-
-```shell script
-python Cli.py --input ip:x.x.x.x login
-python Cli.py --input ip:x.x.x.x login --plugin ssh
-python Cli.py --input ip:x.x.x.x login --plugin ssh --console
-```
-
-### 渗透辅助
-+ MD5解密
-```shell script
-python Cli.py --input md5:1a79a4d60de6718e8e5b326e338ae533 tools --plugin md5
-```
-+ 识别杀软
-```shell script
-python Cli.py --input file:tasklist.txt tools --plugin what_av
-```
 
 ### 命令联动
 ```shell script

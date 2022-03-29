@@ -6,7 +6,6 @@ class Plugin(Base):
         "author": "doimet",
         "references": ["https://otx.alienvault.com"],
         "description": "alienvault查询",
-        "datetime": "2022-01-09"
     }
 
     def domain(self) -> dict:

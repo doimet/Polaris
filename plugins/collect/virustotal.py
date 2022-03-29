@@ -7,7 +7,6 @@ class Plugin(Base):
         "references": ["https://www.virustotal.com"],
         "name": "virustotal",
         "description": "virustotal查询",
-        "datetime": "2022-01-06"
     }
 
     def domain(self) -> dict:

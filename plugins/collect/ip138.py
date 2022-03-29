@@ -8,7 +8,6 @@ class Plugin(Base):
         "references": ["https://site.ip138.com"],
         "name": "IP138",
         "description": "IP138查询",
-        "datetime": "2021-12-27"
     }
 
     def domain(self) -> dict:

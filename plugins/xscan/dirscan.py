@@ -10,7 +10,6 @@ class Plugin(Base):
         "author": "doimet",
         "references": ["-"],
         "description": "扫描网站目录",
-        "datetime": "2022-02-07"
     }
 
     def init(self):
@@ -25,9 +24,9 @@ class Plugin(Base):
         flag_sim = second_sim
         return distance, flag_sim
 
-    @cli.options('url', desc="扫描目标地址", default='{self.target.value}')
-    @cli.options('extension', desc="指定后缀", choice=['asp', 'jsp', 'php', 'aspx', '*'], default='*')
-    @cli.options('timeout', desc="连接超时时间", type=int, default=3)
+    @cli.options('url', description="扫描目标地址", default='{self.target.value}')
+    @cli.options('extension', description="指定后缀", choice=['asp', 'jsp', 'php', 'aspx', '*'], default='*')
+    @cli.options('timeout', description="连接超时时间", type=int, default=3)
     def url(self, url, extension, timeout) -> dict:
         distance, flag_sim = self.custom_request_test(url)
         with open(os.path.join('data', 'path.dict'), encoding='utf-8') as f:

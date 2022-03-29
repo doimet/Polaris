@@ -7,7 +7,6 @@ class Plugin(Base):
         "author": "doimet",
         "references": ["https://riddler.io"],
         "description": "riddler查询",
-        "datetime": "2021-12-31"
     }
 
     def domain(self) -> dict:

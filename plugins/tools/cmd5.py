@@ -6,10 +6,9 @@ class Plugin(Base):
         "author": "doimet",
         "references": ["https://www.cmd5.com"],
         "description": "CMD5解密hash",
-        "datetime": "2021-12-27"
     }
 
-    @cli.options('input', desc='需要解密的hash', default='{self.target.value}')
+    @cli.options('input', description='需要解密的hash', default='{self.target.value}')
     def md5(self, _input) -> dict:
         r = self.request(
             method='get',

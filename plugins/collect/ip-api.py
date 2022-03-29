@@ -6,7 +6,6 @@ class Plugin(Base):
         "author": "doimet",
         "references": ["http://ip-api.com"],
         "description": "获取网站的物理地址",
-        "datetime": "2021-12-27"
     }
 
     def ip(self) -> dict:

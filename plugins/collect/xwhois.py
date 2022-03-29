@@ -7,7 +7,6 @@ class Plugin(Base):
         "author": "doimet",
         "references": ["-"],
         "description": "获取域名whois信息",
-        "datetime": "2021-12-27"
     }
 
     def domain(self) -> dict:

@@ -7,7 +7,6 @@ class Plugin(Base):
         "author": "doimet",
         "references": ["http://ptrarchive.com"],
         "description": "ptrarchive查询",
-        "datetime": "2022-01-01"
     }
 
     def domain(self) -> dict:

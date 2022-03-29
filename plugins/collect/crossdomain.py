@@ -7,7 +7,6 @@ class Plugin(Base):
         "author": "doimet",
         "references": ["https://www.robtex.com"],
         "description": "crossdomain提取子域名",
-        "datetime": "2022-01-01"
     }
 
     def domain(self) -> dict:

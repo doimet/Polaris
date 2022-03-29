@@ -7,7 +7,6 @@ class Plugin(Base):
         "author": "doimet",
         "references": ["-"],
         "description": "robots",
-        "datetime": "2022-01-01"
     }
 
     def domain(self) -> dict:

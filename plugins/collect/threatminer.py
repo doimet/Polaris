@@ -7,7 +7,6 @@ class Plugin(Base):
         "author": "doimet",
         "references": ["https://www.threatminer.org"],
         "description": "threatminer查询",
-        "datetime": "2022-01-09"
     }
 
     def domain(self) -> dict:

@@ -8,7 +8,6 @@ class Plugin(Base):
         "author": "doimet",
         "references": ["https://bgp.he.net"],
         "description": "BGP查询",
-        "datetime": "2022-02-06"
     }
 
     def ip(self) -> dict:

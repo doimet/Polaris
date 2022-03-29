@@ -6,7 +6,6 @@ class Plugin(Base):
         "author": "doimet",
         "references": ["https://api.hunter.io"],
         "description": "hunter查询",
-        "datetime": "2022-01-06"
     }
 
     def domain(self) -> dict:

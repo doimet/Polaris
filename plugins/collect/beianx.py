@@ -7,7 +7,6 @@ class Plugin(Base):
         "author": "doimet",
         "references": ["https://www.beianx.cn"],
         "description": "备案查询",
-        "datetime": "2022-02-17"
     }
 
     def icp(self) -> dict:

@@ -9,7 +9,6 @@ class Plugin(Base):
         "author": "doimet",
         "references": ["-"],
         "description": "通过SSL证书获取子域名",
-        "datetime": "2021-12-27"
     }
 
     def ip(self) -> dict:

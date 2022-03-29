@@ -7,7 +7,6 @@ class Plugin(Base):
         "author": "doimet",
         "references": ["https://www.email-format.com"],
         "description": "电子邮件查询",
-        "datetime": "2022-02-22"
     }
 
     def domain(self) -> dict:

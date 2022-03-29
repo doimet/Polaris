@@ -8,10 +8,9 @@ class Plugin(Base):
         "author": "doimet",
         "references": ["-"],
         "description": "枚举子域名",
-        "datetime": "2022-01-01"
     }
 
-    @cli.options('input', desc="设置输入目标", default='{self.target.value}')
+    @cli.options('input', description="设置输入目标", default='{self.target.value}')
     def domain(self, domain):
         with self.async_pool() as execute:
             with open(os.path.join('data', 'subdomain.dict'), encoding='utf-8') as f:

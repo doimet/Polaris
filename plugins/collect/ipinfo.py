@@ -6,7 +6,6 @@ class Plugin(Base):
         "author": "doimet",
         "references": ["http://ipinfo.io"],
         "description": "通过ipinfo获取信息",
-        "datetime": "2021-12-27"
     }
 
     def ip(self) -> dict:

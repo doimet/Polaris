@@ -18,11 +18,10 @@ class Plugin(Base):
         "author": "doimet",
         "references": ["https://github.com/horizon3ai/vcenter_saml_login"],
         "description": "生成用于登录vCenter平台的cookie",
-        "datetime": "2022-02-02"
     }
 
-    @cli.options("file", desc="data.mdb路径(该文件位于/storage/db/vmware-vmdir)", default='{self.target.value}')
-    @cli.options("ip", desc="IP地址", required=True)
+    @cli.options("file", description="data.mdb路径(该文件位于/storage/db/vmware-vmdir)", default='{self.target.value}')
+    @cli.options("ip", description="IP地址", required=True)
     def file(self, path, ip) -> dict:
         with open(path, 'rb') as f:
             content = f.read()

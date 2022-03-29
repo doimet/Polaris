@@ -8,10 +8,9 @@ class Plugin(Base):
         "author": "doimet",
         "references": ["https://github.com/StudyCat404/WhatAV"],
         "description": "识别进程中的杀软",
-        "datetime": "2022-01-09"
     }
 
-    @cli.options('file', desc='进程导出文件路径(需执行命令tasklist /svc)', default='{self.target.value}')
+    @cli.options('file', description='进程导出文件路径(需执行的命令tasklist /svc)', default='{self.target.value}')
     def file(self, file) -> dict:
         av_list = []
         with open(file, encoding='utf-8') as f:

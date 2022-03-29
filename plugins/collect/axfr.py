@@ -8,7 +8,6 @@ class Plugin(Base):
         "author": "doimet",
         "references": ["-"],
         "description": "通过域传送获取子域名",
-        "datetime": "2022-01-01"
     }
 
     def domain(self) -> dict:

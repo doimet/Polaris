@@ -7,7 +7,6 @@ class Plugin(Base):
         "author": "doimet",
         "references": ["-"],
         "description": "收集网站标题",
-        "datetime": "2022-01-01"
     }
 
     def url(self) -> dict:
