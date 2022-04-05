@@ -288,6 +288,7 @@ class Application:
         return res
 
     def check_is_live(self, _key, _value):
+        return True, ''
         """
         检测目标指标:
         1.检测目标是否存活
