@@ -5,6 +5,7 @@ import lxml.etree
 class Plugin(Base):
     __info__ = {
         "author": "doimet",
+        "name": "Riddler",
         "references": ["https://riddler.io"],
         "description": "riddler查询",
     }

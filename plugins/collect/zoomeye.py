@@ -6,21 +6,20 @@ import urllib.parse
 class Plugin(Base):
     __info__ = {
         "author": "doimet",
-        "references": ["https://www.zoomeye.org/"],
         "name": "ZoomEye",
+        "references": ["https://www.zoomeye.org/"],
         "description": "ZoomEye网络空间引擎搜索",
     }
 
-    @cli.options('mode', description="可选模式:host,web,icon,domain,cert", choice=['host', 'web', 'icon', 'domain', 'cert'],
-                 default='host')
-    @cli.options('dork', description="查询语法", default='{self.target.value}')
-    @cli.options('limit', description="限制条数", type=int, default=100)
-    @cli.options('timeout', description="请求超时时间", type=int, default=30)
-    @cli.options('ip_type', description="获取数据类型, 默认为ipv4,ipv6全选", default='ipv4,ipv6')
-    def dork(self, mode, dork, limit, timeout, ip_type) -> dict:
-        return getattr(self, 'custom_search_' + mode)(dork, limit, timeout, ip_type)
+    def dork(self):
+        pass
 
-    def custom_search_host(self, query, limit, timeout, ip_type):
+    @cli.command(description='搜索主机')
+    @cli.options('dork', help="查询语法", default='{self.target.value}')
+    @cli.options('limit', help="限制条数", type=int, default=100)
+    @cli.options('timeout', help="请求超时时间", type=int, default=30)
+    @cli.options('ip_type', help="获取数据类型", default='ipv4,ipv6')
+    def search_host(self, query, limit, timeout, ip_type):
         page, total, page_total, data_list = 1, 0, 0, []
         while True:
             self.log.debug(f'start request page {page}')
@@ -66,7 +65,11 @@ class Plugin(Base):
         self.log.info(f'search result total: {total}')
         return {"data_list": data_list}
 
-    def custom_search_web(self, query, limit, timeout, ip_type):
+    @cli.command(description='搜索网站')
+    @cli.options('dork', help="查询语法", default='{self.target.value}')
+    @cli.options('limit', help="限制条数", type=int, default=100)
+    @cli.options('timeout', help="请求超时时间", type=int, default=30)
+    def search_web(self, query, limit, timeout):
         page, total, page_total, data_list = 1, 0, 0, []
         while True:
             self.log.debug(f'start request page {page}')
@@ -111,13 +114,27 @@ class Plugin(Base):
         self.log.info(f'search result total: {total}')
         return {"data_list": data_list}
 
-    def custom_search_icon(self, query, limit, timeout, ip_type):
-        return self.custom_search_host('iconhash:' + query, limit, timeout, ip_type)
+    @cli.command(description='搜索图标')
+    @cli.options('dork', help="查询语法", default='{self.target.value}')
+    @cli.options('limit', help="限制条数", type=int, default=100)
+    @cli.options('timeout', help="请求超时时间", type=int, default=30)
+    @cli.options('ip_type', help="获取数据类型", default='ipv4,ipv6')
+    def search_icon(self, query, limit, timeout, ip_type):
+        return self.search_host('iconhash:' + query, limit, timeout, ip_type)
 
-    def custom_search_cert(self, query, limit, timeout, ip_type):
-        return self.custom_search_host('ssl:' + query, limit, timeout, ip_type)
+    @cli.command(description='搜索整数')
+    @cli.options('dork', help="查询语法", default='{self.target.value}')
+    @cli.options('limit', help="限制条数", type=int, default=100)
+    @cli.options('timeout', help="请求超时时间", type=int, default=30)
+    @cli.options('ip_type', help="获取数据类型", default='ipv4,ipv6')
+    def search_cert(self, query, limit, timeout, ip_type):
+        return self.search_host('ssl:' + query, limit, timeout, ip_type)
 
-    def custom_search_domain(self, query, limit, timeout, ip_type):
+    @cli.command(description='搜索域名')
+    @cli.options('dork', help="查询语法", default='{self.target.value}')
+    @cli.options('limit', help="限制条数", type=int, default=100)
+    @cli.options('timeout', help="请求超时时间", type=int, default=30)
+    def search_domain(self, query, limit, timeout):
         page, page_total, data_list = 1, 0, []
         while True:
             self.log.debug(f'start request page {page}')

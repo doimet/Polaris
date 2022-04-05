@@ -7,14 +7,14 @@ import urllib.parse
 class Plugin(Base):
     __info__ = {
         "author": "doimet",
-        "references": ["https://aiqicha.baidu.com"],
         "name": "爱企查",
+        "references": ["https://aiqicha.baidu.com"],
         "description": "爱企查企业信息查询",
     }
 
-    @cli.options('company', description="设置公司名称", default='{self.target.value}')
-    @cli.options('ua', description="设置User-Agent", default='{self.config.aiqicha.ua}')
-    @cli.options('cookies', description="认证cookie", default='{self.config.aiqicha.cookie}')
+    @cli.options('company', help="设置公司名称", default='{self.target.value}')
+    @cli.options('ua', help="设置User-Agent", default='{self.config.aiqicha.ua}')
+    @cli.options('cookies', help="认证cookie", default='{self.config.aiqicha.cookie}')
     def company(self, company, ua, cookies) -> dict:
         if not cookies or not ua:
             raise Exception('missing cookies or ua parameter')

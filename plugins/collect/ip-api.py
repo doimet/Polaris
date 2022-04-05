@@ -4,6 +4,7 @@
 class Plugin(Base):
     __info__ = {
         "author": "doimet",
+        "name": "IP-API",
         "references": ["http://ip-api.com"],
         "description": "获取网站的物理地址",
     }

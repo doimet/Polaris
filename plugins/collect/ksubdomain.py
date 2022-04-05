@@ -6,17 +6,17 @@ import aiodns
 class Plugin(Base):
     __info__ = {
         "author": "doimet",
+        "name": "枚举子域名",
         "references": ["-"],
-        "description": "枚举子域名",
+        "description": "利用DNS解析快速枚举子域名",
     }
 
-    @cli.options('input', description="设置输入目标", default='{self.target.value}')
-    def domain(self, domain):
+    def domain(self):
         with self.async_pool() as execute:
             with open(os.path.join('data', 'subdomain.dict'), encoding='utf-8') as f:
                 for line in f:
                     prefix = line.strip()
-                    execute.submit(self.custom_task, f'{prefix}.{domain}') if prefix else None
+                    execute.submit(self.custom_task, f'{prefix}.{self.target.value}') if prefix else None
             return {'SubdomainList': execute.result()}
 
     async def custom_task(self, subdomain):

@@ -6,6 +6,7 @@ import lxml.etree
 class Plugin(Base):
     __info__ = {
         "author": "doimet",
+        "name": "站长之家",
         "references": ["http://mtool.chinaz.com", "http://micp.chinaz.com"],
         "description": "站长之家查询",
     }

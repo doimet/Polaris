@@ -6,6 +6,7 @@ import dns.resolver
 class Plugin(Base):
     __info__ = {
         "author": "doimet",
+        "name": "域传送",
         "references": ["-"],
         "description": "通过域传送获取子域名",
     }
