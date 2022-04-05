@@ -49,30 +49,22 @@ class Application:
             else:
                 self.log.error(message)
 
-    def shows(self):
+    def shows(self, attribute=None):
         """ 获取插件列表 """
-
         show_list = []
-
         base_path = os.path.join('plugins', self.options['command'])
-        attribute = self.options['input'][0][0] if self.options['input'] else None
+        if 'input' in self.options.keys() and self.options['input']:
+            attribute = self.options['input'][0][0]
 
         for file_path, file_name, file_ext in self.get_plugin_list(base_path, self.options['plugin'], attribute):
             plugin_obj = self.get_plugin_object(os.path.join(file_path, file_name + file_ext))
 
             plugin_info = plugin_obj.__info__
-            plugin_inst = plugin_obj(file_name, {}, {}, {}, None, {})
+            plugin_inst = plugin_obj({}, {}, {}, None, {})
             inner_method = plugin_inst.__method__
-            decorate_method = plugin_inst.__decorate__['main']
-            support = []
-            for i in inner_method:
-                if i in decorate_method:
-                    support.append(i + '(console)')
-                else:
-                    support.append(i)
-            else:
-                if len(inner_method) == 1 and decorate_method and 'console' not in support[0]:
-                    support[0] += '(console)'
+            decorate_method = plugin_inst.__decorate__
+            if self.options['console'] and len(decorate_method) == 0:
+                continue
 
             status = '\033[0;31mDisable\033[0m' if (
                     file_name in self.config.keys() and self.config[file_name].get('enable', False)
@@ -83,7 +75,7 @@ class Application:
                         '插件': file_name,
                         '名称': plugin_info['name'],
                         '描述': plugin_info['description'],
-                        '支持': ','.join(support),
+                        '支持': ','.join(inner_method),
                         '状态': status
                     },
                     {
@@ -91,11 +83,10 @@ class Application:
                         '作者': plugin_info['author'],
                         '名称': plugin_info['name'],
                         '描述': plugin_info['description'],
-                        '支持': ','.join(support),
+                        '支持': ','.join(inner_method),
                         '来源': ', '.join(plugin_info['references']) if isinstance(plugin_info['references'], list) else
                         plugin_info['references'],
                         '状态': status,
-                        '日期': plugin_info['datetime'],
                     }
                 ]
             )
@@ -109,8 +100,8 @@ class Application:
             self.log.root(f'Not found {self.options["command"]} plugin')
         else:
             self.log.root(f'List {self.options["command"]} plugin: {len(plugin_list)}')
-            tb = get_table_form(plugin_list, layout='vertical' if is_show_detail else 'horizontal')
-            self.log.child(str(tb).replace('\n', '\n\033[0;34m | \033[0m '))
+            table = get_table_form(plugin_list, layout='vertical' if is_show_detail else 'horizontal')
+            self.log.child(table)
 
     def save(self):
         """ 输出处理 """
@@ -130,39 +121,139 @@ class Application:
         depth = self.config['general']['depth']
         max_workers = self.config['general']['threads']
         task_list, result, cache, taskset = [], [], set(), [target_tuple]
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            while taskset and depth != 0:
-                for target_tuple in taskset:
-                    if target_tuple in cache:
-                        continue
+        base_path = os.path.join('plugins', self.options['command'])
+        # 交互/非交互 处理逻辑
+        if self.options['console']:
+            # 设置日志模式
+            self.log.set_mode(1)
+            # 暂停消息线程
+            self.event.clear()
+            self.log.root(rf'开始进入控制台模式 [?]')
+            self.log.echo(r"  ____  ____  _      ____  ____  _     _____ ")
+            self.log.echo(r" /   _\/  _ \/ \  /|/ ___\/  _ \/ \   /  __/ ")
+            self.log.echo(r" |  /  | / \|| |\ |||    \| / \|| |   |  \   ")
+            self.log.echo(r" |  \__| \_/|| | \||\___ || \_/|| |_/\|  /_  ")
+            self.log.echo(r" \____/\____/\_/  \|\____/\____/\____/\____\ ")
+            self.log.echo("")
+            if len(self.options['plugin']) == 1:
+                prompt = plugin_name = self.options['plugin'][0]
+                obj = self.search_plugin_object(base_path, plugin_name, target_tuple)
+            else:
+                prompt = 'localhost'
+                obj = None
 
-                    base_path = os.path.join('plugins', self.options['command'])
-                    for file_path, file_name, file_ext in self.get_plugin_list(
-                            base_path,
-                            self.options['plugin'],
-                            target_tuple[0]
-                    ):
-                        plugin_obj = self.get_plugin_object(os.path.join(file_path, file_name + file_ext))
-                        if target_tuple[0] not in dir(plugin_obj):
+            while True:
+                keyword = input(f'\r{150 * " "}\r[{prompt} \033[0;31m~\033[0m]# ')
+                if not keyword:
+                    continue
+                sp = keyword.split(' ')
+                command, args = (sp[0], []) if len(sp) == 1 else (sp[0], sp[1:])
+                if command in ['quit', 'exit']:
+                    break
+                elif command in ['help', '?']:
+                    self.log.info('核心命令:')
+                    data = [
+                        {
+                            'run': '运行插件',
+                            'use': '切换插件',
+                            'info': '显示信息',
+                            'list': '列出方法',
+                            'quit': '退出程序',
+                            'help': '获取帮助',
+                        }
+                    ]
+                    tb = get_table_form(data, layout='vertical', title=['命令', '描述'], rank=False)
+                    self.log.echo(tb)
+                elif command in ['run']:
+                    if obj:
+                        self.event.set()
+                        res = getattr(obj, target_tuple[0])()
+                        self.event.clear()
+                        self.echo_handle(name=prompt, data=res)
+                    else:
+                        self.log.warn('not found plugin')
+                elif command == 'use':
+                    obj = self.search_plugin_object(base_path, args[0], target_tuple)
+                    if obj:
+                        prompt = args[0]
+                    else:
+                        self.log.warn('not found plugin')
+                elif command in ['info']:
+                    if obj:
+                        obj.log.info('内置方法:')
+                        function_dict = {}
+                        module_object = importlib.import_module("core.utils")
+                        for method_name in dir(module_object):
+                            if method_name[0] != '_':
+                                class_attr_obj = getattr(module_object, method_name)
+                                if type(class_attr_obj).__name__ == 'function' and class_attr_obj.__doc__:
+                                    description = class_attr_obj.__doc__
+                                    if any(x.isupper() for x in method_name):
+                                        continue
+                                    function_dict[description] = method_name
+
+                        if function_dict:
+                            inner_method = [
+                                {
+                                    '方法': v,
+                                    '描述': k
+                                } for k, v in function_dict.items()
+                            ]
+                            tb = get_table_form(inner_method, rank=False)
+                            obj.log.echo(tb)
+                        self.log.info('插件方法:')
+                        custom_method = {}
+                        for func_name in obj.__decorate__:
+                            desc = getattr(obj, func_name)(FLAG=True)
+                            custom_method[func_name] = desc
+                        tb = get_table_form([custom_method], layout='vertical', title=['方法', '描述'], rank=False)
+                        self.log.echo(tb)
+                    else:
+                        self.log.warn('not found plugin')
+                elif command in ['list']:
+                    self.shows()
+                else:
+                    # 调用方法并执行
+                    callback = functools.partial(self.log.warn, f"unknown usage: {keyword}")
+                    res = getattr(obj, command.replace('-', '_'), callback)()
+                    if res:
+                        self.log.echo(res)
+            # 暂停消息线程
+            self.event.clear()
+            # 恢复日志模式
+            self.log.set_mode(0)
+        else:
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                while taskset and depth != 0:
+                    for target_tuple in taskset:
+                        if target_tuple in cache:
                             continue
-                        self.job_total += 1
-                        future = executor.submit(self.job_func, file_name, target_tuple, plugin_obj)
-                        future.add_done_callback(self.on_finish)
-                        task_list.append(future)
-                    cache.add(target_tuple)
-                # wait(task_list, return_when=FIRST_EXCEPTION)
-                # # 反向序列化之前塞入的任务队列，并逐个取消
-                # for task in reversed(task_list):
-                #     task.cancel()
-                wait(task_list, return_when=ALL_COMPLETED)
-                for future in as_completed(task_list):
-                    result.append(future.result())
-                taskset = self.build_target(result)
-                depth -= 1
-        # result = list(chain(*list(filter(lambda x: x is not None, result))))
-        result = self.final_handle(result)
-        data = keep_data_format(merge_same_data(result, len(result), {}))
-        return data
+                        for file_path, file_name, file_ext in self.get_plugin_list(
+                                base_path,
+                                self.options['plugin'],
+                                target_tuple[0]
+                        ):
+                            plugin_obj = self.get_plugin_object(os.path.join(file_path, file_name + file_ext))
+                            if target_tuple[0] not in dir(plugin_obj):
+                                continue
+                            self.job_total += 1
+                            future = executor.submit(self.job_func, file_name, target_tuple, plugin_obj)
+                            future.add_done_callback(self.on_finish)
+                            task_list.append(future)
+                        cache.add(target_tuple)
+                    # wait(task_list, return_when=FIRST_EXCEPTION)
+                    # # 反向序列化之前塞入的任务队列，并逐个取消
+                    # for task in reversed(task_list):
+                    #     task.cancel()
+                    wait(task_list, return_when=ALL_COMPLETED)
+                    for future in as_completed(task_list):
+                        result.append(future.result())
+                    taskset = self.build_target(result)
+                    depth -= 1
+            # result = list(chain(*list(filter(lambda x: x is not None, result))))
+            result = self.final_handle(result)
+            data = keep_data_format(merge_same_data(result, len(result), {}))
+            return data
 
     def final_handle(self, data):
         """ 提取网段 ip """
@@ -197,6 +288,7 @@ class Application:
         return res
 
     def check_is_live(self, _key, _value):
+        return True, ''
         """
         检测目标指标:
         1.检测目标是否存活
@@ -205,7 +297,7 @@ class Application:
         if _key == 'url':
             request = Request({}, {})
             try:
-                r = request.request(method="get", url=_value, timeout=7)
+                r = request.request(method="get", url=_value, timeout=15)
                 if self.check_is_honeypot(r.text):
                     return False, 'the target is honeypot'
             except Exception as e:
@@ -253,22 +345,25 @@ var BS_CODE=8
 
     def echo_handle(self, name, data=None, key='result'):
         """ 数据回显处理 """
-        name = name.replace('((', '(').replace('))', ')')
+        if not data:
+            return
+        if name:
+            name = f"({name.replace('(', '').replace(')', '')})"
         if isinstance(data, str) or isinstance(data, int):
             self.log.child(f'{key}: {str(data).strip()} {name}')
         elif isinstance(data, list) and len(data) != 0:
             self.log.child(f'{key}: {len(data)} {name}')
             table = get_table_form(data)
-            self.log.child(str(table).replace('\n', '\n\033[0;34m | \033[0m '))
+            self.log.child(table)
         elif isinstance(data, dict):
             if not all(map(lambda x: isinstance(x, str) or isinstance(x, int), data.values())):
                 for n, (k, v) in enumerate(data.items()):
-                    name = f'({name})' if n == 0 else ''
+                    name = f'{name}' if n == 0 else ''
                     self.echo_handle(name=name, data=v, key=k)
             else:
                 self.log.child(f'{key}: 1 {name}')
                 table = get_table_form(data, layout='vertical')
-                self.log.child(str(table).replace('\n', '\n\033[0;34m | \033[0m '))
+                self.log.child(table)
 
     def job_func(self, plugin_name, target_tuple: tuple, plugin_object):
         """ 任务函数 """
@@ -283,7 +378,6 @@ var BS_CODE=8
             options = self.options
             # 停止处理传入插件内的参数
             obj = plugin_object(
-                plugin_name,
                 options,
                 self.config,
                 {
@@ -293,18 +387,7 @@ var BS_CODE=8
                 self.event,
                 self.threshold
             )
-            if self.options.get('console', False):
-                # 暂停消息线程
-                self.event.clear()
-                call_func_name = obj.__decorate__['main']
-                if call_func_name:
-                    data = getattr(obj, call_func_name)()
-                else:
-                    raise Exception('decorated function not found')
-                # 恢复消息线程
-                self.event.set()
-            else:
-                data = getattr(obj, target_tuple[0])()
+            data = getattr(obj, target_tuple[0])()
             return data
         except Exception as e:
             self.log.warn(f'{str(e)} (plugin:{plugin_name})')
@@ -337,6 +420,19 @@ var BS_CODE=8
             buffer_length = len(text)
             sys.stdout.flush()
             time.sleep(1)
+
+    def search_plugin_object(self, base_path, plugin_name=None, target=None):
+        """ 通过插件名称获取插件对象 """
+        for file_path, file_name, file_ext in self.get_plugin_list(base_path, (plugin_name, ), target[0]):
+            plugin_object = self.get_plugin_object(os.path.join(file_path, file_name + file_ext))
+            obj = plugin_object(
+                self.options,
+                self.config,
+                {'key': target[0], 'value': target[1]},
+                self.event,
+                self.threshold
+            )
+            return obj
 
     @staticmethod
     def list_path_file(path):

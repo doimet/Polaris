@@ -5,6 +5,7 @@ import lxml.etree
 class Plugin(Base):
     __info__ = {
         "author": "doimet",
+        "name": "Rapiddns",
         "references": ["https://rapiddns.io"],
         "description": "rapiddns查询",
     }

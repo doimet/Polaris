@@ -5,6 +5,7 @@ import re
 class Plugin(Base):
     __info__ = {
         "author": "doimet",
+        "name": "Ptrarchive",
         "references": ["http://ptrarchive.com"],
         "description": "ptrarchive查询",
     }

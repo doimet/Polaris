@@ -6,6 +6,7 @@ import lxml.etree
 class Plugin(Base):
     __info__ = {
         "author": "doimet",
+        "name": "BGP",
         "references": ["https://bgp.he.net"],
         "description": "BGP查询",
     }

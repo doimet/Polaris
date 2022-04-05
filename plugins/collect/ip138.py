@@ -5,8 +5,8 @@ import lxml.etree
 class Plugin(Base):
     __info__ = {
         "author": "doimet",
-        "references": ["https://site.ip138.com"],
         "name": "IP138",
+        "references": ["https://site.ip138.com"],
         "description": "IP138查询",
     }
 

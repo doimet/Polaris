@@ -9,6 +9,7 @@
 # 项目简介
 一个美观舒适的辅助渗透测试框架(完善中)
 
+😘喜欢就给个star吧！
 # 使用帮助
 
 + 修改配置文件
@@ -29,7 +30,7 @@
     python Cli.py {命令} --help
     ```
     ![Image](docs/images/screenshort_02.png)
-    可选命令: `collect`、`exploit`、`login`、`auxiliary`
+    可选命令: `collect`、`exploit`
 + 查看插件信息
     + 列出所有插件
         ```shell script
@@ -56,12 +57,12 @@
         ```shell script
         python Cli.py {命令} --plugin '%{插件}' --list
         ```
+        ![Image](docs/images/screenshort_07.png)
 + 运行命令格式
     ```shell script
     python Cli.py --input {类型}:{目标/文件} {调用命令} {调用参数}
     ```
-    ![Image](docs/images/screenshort_07.png)
-    可选输出文件类型: `json`
+    可选输出文件类型: `json`、`md`
 ## 使用示例
 
 ### 收集信息
@@ -69,8 +70,8 @@
 + 收集子域名
     ```shell script
     python Cli.py --input domain:example.com collect
-    python Cli.py --input domain:example.com collect --plugin china
-    python Cli.py --input domain:example.com collect --plugin china --plugin ip138
+    python Cli.py --input domain:example.com collect --plugin chinaz
+    python Cli.py --input domain:example.com collect --plugin chinaz --plugin ip138
     python Cli.py --input domain:example.com collect --plugin !ksubdomain
     python Cli.py --input dork:184.173.106.60 collect --plugin zoomeye --console
     ```
@@ -95,7 +96,9 @@ python Cli.py --input url:http://example.com exploit
 python Cli.py --input url:http://example.com exploit --plugin CVE-2021-22205
 python Cli.py --input url:http://example.com exploit --plugin CVE-2021-22205 --console
 ```
-指定`console`参数可进入交互模式
+![Image](docs/images/screenshort_10.png)
+![Image](docs/images/screenshort_11.png)
+指定`console`参数可进入交互模式, 输入help列出帮助信息
 
 ### 命令联动
 ```shell script

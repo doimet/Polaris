@@ -34,7 +34,7 @@ def show_banner(func):
 
     def wrapper(options, processors):
         print(f"""
-    \033[0;31mPolaris - 渗透测试框架 1.2.4\033[0m
+    \033[0;31mPolaris - 渗透测试框架 1.3.0\033[0m
 
  =# Author: 浮鱼
  =# Github: https://github.com/doimet/Polaris
@@ -70,7 +70,7 @@ def parse_input_param(ctx, param, value):
     if match:
         task_list, key, value = [], match.group(1), match.group(2)
         if os.path.isfile(value):
-            if key == 'file':
+            if key in ['file', 'image']:
                 value_list = [value]
             else:
                 with open(value, encoding='utf-8') as f:
@@ -158,16 +158,6 @@ def collect(**kwargs):
     return merge_options(kwargs)
 
 
-@cli.command(name='xscan')
-@click.option('--plugin', '-p', help='指定扫描的插件.', multiple=True)
-@click.option('--console', '-c', help='开启插件控制台模式.', is_flag=True)
-@click.option('--list', '-l', help='列出插件的详细信息.', is_flag=True)
-@click.help_option('--help', '-h', help='显示帮助信息并退出.')
-def xscan(**kwargs):
-    """ 系统应用扫描模块 """
-    return merge_options(kwargs)
-
-
 @cli.command(name='exploit')
 @click.option('--plugin', '-p', help='指定漏洞利用的插件.', multiple=True)
 @click.option('--console', '-c', help='开启插件控制台模式.', is_flag=True)
@@ -175,26 +165,6 @@ def xscan(**kwargs):
 @click.help_option('--help', '-h', help='显示帮助信息并退出.')
 def exploit(**kwargs):
     """ 漏洞验证利用模块 """
-    return merge_options(kwargs)
-
-
-@cli.command(name='login')
-@click.option('--plugin', '-p', help='指定漏洞利用的插件.', multiple=True)
-@click.option('--console', '-c', help='开启插件控制台模式.', is_flag=True)
-@click.option('--list', '-l', help='列出插件的详细信息.', is_flag=True)
-@click.help_option('--help', '-h', help='显示帮助信息并退出.')
-def login(**kwargs):
-    """ 服务登录爆破模块 """
-    return merge_options(kwargs)
-
-
-@cli.command(name='tools')
-@click.option('--plugin', '-p', help='指定漏洞利用的插件.', multiple=True)
-@click.option('--console', '-c', help='开启插件控制台模式.', is_flag=True)
-@click.option('--list', '-l', help='列出插件的详细信息.', is_flag=True)
-@click.help_option('--help', '-h', help='显示帮助信息并退出.')
-def tools(**kwargs):
-    """ 渗透测试辅助模块 """
     return merge_options(kwargs)
 
 

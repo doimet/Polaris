@@ -4,6 +4,7 @@
 class Plugin(Base):
     __info__ = {
         "author": "doimet",
+        "name": "Hunter",
         "references": ["https://api.hunter.io"],
         "description": "hunter查询",
     }

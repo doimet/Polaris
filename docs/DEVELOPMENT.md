@@ -98,12 +98,6 @@
   返回webshell代码、webshell密码、webshell验证代码
   注: 目前只支持php、asp、aspx三种语言, 后面会添加jsp
   ```
-+ `build_login_dict`: 构建口令字典
-  ```
-  build_login_dict(method: int, username: str, password: str) -> iterable
-  传入口令组合模式、用户名称字典、用户密码字典
-  返回用户名称、用户密码
-  ```
 + `is_exist_waf`: 判断Waf
   ```
   is_exist_waf(content: str) -> bool
@@ -112,19 +106,21 @@
   ```
 ## 内置装饰器
 + `cli.params`: 类属性, 用户获取扩展参数
-+ `cli.options`: 类方法装饰器, 将方法扩展成可交互模式(使用--console参数调用)
++ `cli.command`: 类方法装饰器, 用于自定义命令(使用--console参数调用)
   ```
-  cli.options(parmas: str, description: str, type, required, default, choice)
+  cli.command(description: str)
+  description: 描述信息
+  ```
++ `cli.options`: 类方法装饰器, 用户定义命令参数, 配合`cli.command`一起使用
+  ```
+  cli.options(parmas: str, help: str, type, required, default, choice)
   parmas: 参数名称
-  description: 参数描述信息
+  help: 参数描述信息
   type: 参数值类型, 可选: str、int、float、bool
   required: 参数是否必须, bool类型
   default: 参数默认值
   choice: 参数可选值, list类型
-  ``` 
-+ `cli.command`: 类方法装饰器, 用于自定义命令
-  cli.command(description: str)
-  description: 描述信息
+  ```
 
 ## 插件模板
 ### 模板一
@@ -135,10 +131,9 @@
 class Plugin(Base):
     __info__ = {
         "author": "作者",
-        "references": ["来源"],
         "name": "插件名称",
+        "references": ["来源"],
         "description": "描述信息",
-        "datetime": "日期"
     }
 
     def domain(self) -> dict:
@@ -153,57 +148,21 @@ class Plugin(Base):
 class Plugin(Base):
     __info__ = {
         "author": "作者",
-        "references": ["来源"],
         "name": "插件名称",
+        "references": ["来源"],
         "description": "描述信息",
-        "datetime": "日期"
     }
 
     def url(self) -> dict:
         """ 验证代码 """
         ...
     
-    @cli.options('cmd', description="执行的命令", default="whoami")
-    def custom_attack(self, cmd) -> dict:
+    @cli.command(description="执行系统命令")
+    @cli.options('cmd', help="执行的命令", default="whoami")
+    def exec_cmd(self, cmd) -> dict:
         """ 利用代码 """
         ...
 
-```
-### 模板三
-```python
-# -*-* coding:UTF-8
-import os
-
-
-class Plugin(Base):
-    __info__ = {
-        "author": "作者",
-        "references": ["来源"],
-        "name": "插件名称",
-        "description": "描述信息",
-        "datetime": "日期"
-    }
-    
-    @cli.options('ip', description="设置输入目标", default='{self.target.value}')
-    @cli.options('port', description="设置目标端口", type=int, default=3306)
-    @cli.options('method', description="口令爆破模式 1:单点模式 2:交叉模式", type=int, default=2)
-    @cli.options('username', description="用户账号或字典文件", default=os.path.join('data', 'mysql_username.dict'))
-    @cli.options('password', description="用户密码或字典文件", default=os.path.join('data', 'mysql_password.dict'))
-    @cli.options('timeout', description="连接超时时间", type=int, default=5)
-    def ip(self, ip, port, method, username, password, timeout) -> dict:
-        with self.async_pool() as execute:
-            for u, p in self.build_login_dict(method=method, username=username, password=password):
-                execute.submit(self.custom_task, ip, port, u, p, timeout)
-            return {'LoginInfo': execute.result()}
-
-    async def custom_task(self, ip, port, username, password, timeout):
-        """ 编写代码 """
-        ...
-        
-    @cli.command
-    def info(self):
-        """ 扩展命令 """
-        ...
 ```
 
 ## 注意事项

@@ -4,6 +4,7 @@
 class Plugin(Base):
     __info__ = {
         "author": "doimet",
+        "name": "IP-info",
         "references": ["http://ipinfo.io"],
         "description": "通过ipinfo获取信息",
     }

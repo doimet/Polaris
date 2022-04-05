@@ -127,7 +127,11 @@ class Logging(logging.Logger):
         if self.isEnabledFor(50):
             msg = str(msg)
             sys.stdout.write('\r' + 100 * ' ' + '\r')
-            self._log(50, "\r\033[0;34m | \033[0m {}".format(msg + (100 - len(msg)) * ' '), args, **kwargs)
+            if self.is_console_mode:
+                self._log(50, "{}".format(msg + (100 - len(msg)) * ' '), (), **kwargs)
+            else:
+                msg = msg.replace('\n', '\n\033[0;34m | \033[0m ')
+                self._log(50, "\r\033[0;34m | \033[0m {}".format(msg + (100 - len(msg)) * ' '), (), **kwargs)
 
     def root(self, msg, *args, **kwargs):
         """ 消息输出 """
@@ -302,6 +306,7 @@ class AsyncioExecute(object):
 
 class PluginBase(Request):
     """ 插件基类 """
+    target = None
 
     __info__ = {
         "name": "-",
@@ -311,8 +316,7 @@ class PluginBase(Request):
         "datetime": "-"
     }
 
-    def __init__(self, name, options, config, target, event, threshold):
-        self.name = name
+    def __init__(self, options, config, target, event, threshold):
         self.config = DictObject(config)
         self.target = DictObject(target)
         self.options = DictObject(options)
@@ -332,7 +336,6 @@ class PluginBase(Request):
     @property
     def __method__(self):
         method = []
-        decorated_func = ''
         for k, v in self.__class__.__dict__.items():
             if (
                     type(v).__name__ == 'function' and
@@ -345,13 +348,11 @@ class PluginBase(Request):
 
     @property
     def __decorate__(self):
-        decorate = {'main': '', 'alias': []}
+        method = []
         for k, v in self.__class__.__dict__.items():
             if 'Cli.command' in str(v):
-                decorate['alias'].append(k)
-            elif 'Cli.options' in str(v):
-                decorate['main'] = k
-        return decorate
+                method.append(k)
+        return method
 
 
 class YamlPoc(PluginBase):
