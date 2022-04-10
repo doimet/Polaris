@@ -15,8 +15,8 @@ class Plugin(Base):
         return {
             'DomainInfo': {
                 'name': info['name'],
-                'email': info['emails'] if 'abuse' not in info['emails'] else '_' or '-',
-                'registrar': info['registrar'] or '-',
+                'email': info['emails'] if info['emails'] and 'abuse' not in info['emails'] else None,
+                'registrar': info['registrar'],
                 'nameservers': ', '.join(info['name_servers'] or [])
             }
         }

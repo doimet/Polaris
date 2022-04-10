@@ -34,22 +34,23 @@ class Plugin(Base):
                     '//div[@class="container"]//tbody/tr/td[9]/a/@href'
                 )
             )
-            company, icp, subdomain, info_url = [_.strip() for _ in res]
-            r0 = self.request(
-                method='get',
-                url=f'https://www.beianx.cn{info_url}'
-            )
-            if r0.status_code == 200:
-                dom = lxml.etree.HTML(r0.content)
-                domain_list = dom.xpath('//div[@class="container"]//table[@class="table table-bordered table-beianx-details"]//tr[2]/td[2]//a//text()')
-            else:
-                domain_list = []
-            return {
-                "ICPInfo": {
-                    "icp": icp,
-                    "subdomain": subdomain,
-                    "company": company,
-                },
-                "DomainList": domain_list
-            }
-
+            if res:
+                company, icp, subdomain, info_url = [_.strip() for _ in res]
+                r0 = self.request(
+                    method='get',
+                    url=f'https://www.beianx.cn{info_url}'
+                )
+                if r0.status_code == 200:
+                    dom = lxml.etree.HTML(r0.content)
+                    domain_list = dom.xpath(
+                        '//div[@class="container"]//table[@class="table table-bordered table-beianx-details"]//tr[2]/td[2]//a//text()')
+                else:
+                    domain_list = []
+                return {
+                    "ICPInfo": {
+                        "icp": icp,
+                        "subdomain": subdomain,
+                        "company": company,
+                    },
+                    "DomainList": domain_list
+                }
