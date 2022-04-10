@@ -23,7 +23,7 @@ def cost_time(func):
         func(*args, **kwargs)
         stop_time = time.time()
         all_time = round(stop_time - start_time, 2)
-        print(f'\r\033[0;34m[+]\033[0m Finished use time {all_time}s{50 * " "}')
+        print(f'\r\033[0;34m[⇣]\033[0m Finished use time {all_time}s{50 * " "}')
         sys.exit()
 
     return wrapper
@@ -34,7 +34,7 @@ def show_banner(func):
 
     def wrapper(options, processors):
         print(f"""
-    \033[0;31mPolaris - 渗透测试框架 1.3.1\033[0m
+    \033[0;31mPolaris - 渗透测试框架 1.3.0\033[0m
 
  =# Author: 浮鱼
  =# Github: https://github.com/doimet/Polaris

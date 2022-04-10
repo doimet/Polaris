@@ -25,4 +25,10 @@ class Plugin(Base):
                     result.append(full_domain)
             except:
                 pass
-        return {'SubdomainList': [{'subdomain': _} for _ in result]}
+        return {
+            'SubdomainList': [
+                {
+                    'subdomain': _
+                } for _ in result
+            ]
+        }
