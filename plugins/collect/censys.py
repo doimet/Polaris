@@ -27,6 +27,8 @@ class Plugin(Base):
                 raise Exception('Invalid API Key')
             elif r.status_code == 200:
                 content = r.json()
+                if content['error']:
+                    raise Exception('Invalid API Key')
                 for i in content['results']:
                     for j in i['parsed.names']:
                         result.append(j)

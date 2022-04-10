@@ -23,7 +23,7 @@ def cost_time(func):
         func(*args, **kwargs)
         stop_time = time.time()
         all_time = round(stop_time - start_time, 2)
-        print(f'\r\033[0;34m[⇣]\033[0m Finished use time {all_time}s{50 * " "}')
+        print(f'\r\033[0;34m[+]\033[0m Finished use time {all_time}s{50 * " "}')
         sys.exit()
 
     return wrapper
