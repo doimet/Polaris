@@ -4,10 +4,9 @@ import whois
 
 class Plugin(Base):
     __info__ = {
-        "author": "doimet",
         "name": "Whois",
-        "references": ["-"],
         "description": "获取域名whois信息",
+        "references": ["-"],
     }
 
     def domain(self) -> dict:

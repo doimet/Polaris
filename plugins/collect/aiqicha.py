@@ -6,10 +6,9 @@ import urllib.parse
 
 class Plugin(Base):
     __info__ = {
-        "author": "doimet",
         "name": "爱企查",
-        "references": ["https://aiqicha.baidu.com"],
         "description": "爱企查企业信息查询",
+        "references": ["https://aiqicha.baidu.com"],
     }
 
     @cli.options('company', help="设置公司名称", default='{self.target.value}')
@@ -65,7 +64,7 @@ class Plugin(Base):
             match = re.findall('website":"(.*?)"', r.text)
             if match:
                 base_info['subdomain'] = match[0] if len(match) == 1 else match
-            return {"base_info": base_info}
+            return {"BaseInfo": base_info}
 
     async def custom_collect_holds_info(self, pid):
         self.log.debug(f'start collect company holds info')
@@ -90,7 +89,7 @@ class Plugin(Base):
                 page += 1
             else:
                 break
-        return {"holds_info": holds_info}
+        return {"HoldsInfo": holds_info}
 
     async def custom_collect_branch_info(self, pid):
         self.log.debug(f'start collect company branch info')
@@ -115,7 +114,7 @@ class Plugin(Base):
                 page += 1
             else:
                 break
-        return {"branch_info": branch_info}
+        return {"BranchInfo": branch_info}
 
     async def custom_collect_invest_info(self, pid):
         self.log.debug(f'start collect company invest info')
@@ -140,7 +139,7 @@ class Plugin(Base):
                 page += 1
             else:
                 break
-        return {"invest_info": invest_info}
+        return {"InvestInfo": invest_info}
 
     async def custom_collect_app_info(self, pid):
         self.log.debug(f'start collect company app info')
@@ -165,7 +164,7 @@ class Plugin(Base):
                 page += 1
             else:
                 break
-        return {"app_info": app_info}
+        return {"APPInfo": app_info}
 
     async def custom_collect_icp_info(self, pid):
         self.log.debug(f'start collect company icp info')
@@ -190,4 +189,4 @@ class Plugin(Base):
                 page += 1
             else:
                 break
-        return {"icp_info": icp_info}
+        return {"ICPInfo": icp_info}

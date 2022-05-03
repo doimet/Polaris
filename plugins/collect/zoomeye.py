@@ -5,10 +5,9 @@ import urllib.parse
 
 class Plugin(Base):
     __info__ = {
-        "author": "doimet",
         "name": "ZoomEye",
-        "references": ["https://www.zoomeye.org/"],
         "description": "ZoomEye网络空间引擎搜索",
+        "references": ["https://www.zoomeye.org/"],
     }
 
     def dork(self):
@@ -63,7 +62,7 @@ class Plugin(Base):
                 self.log.warn(r.text)
             break
         self.log.info(f'search result total: {total}')
-        return {"data_list": data_list}
+        return {"DataList": data_list}
 
     @cli.command(description='搜索网站')
     @cli.options('dork', help="查询语法", default='{self.target.value}')
@@ -112,7 +111,7 @@ class Plugin(Base):
                 self.log.warn(r.text)
             break
         self.log.info(f'search result total: {total}')
-        return {"data_list": data_list}
+        return {"DataList": data_list}
 
     @cli.command(description='搜索图标')
     @cli.options('dork', help="查询语法", default='{self.target.value}')
@@ -167,4 +166,4 @@ class Plugin(Base):
             else:
                 self.log.warn(r.text)
             break
-        return {"data_list": data_list}
+        return {"DataList": data_list}

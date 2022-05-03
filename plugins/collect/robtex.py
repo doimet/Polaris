@@ -4,10 +4,9 @@ import re
 
 class Plugin(Base):
     __info__ = {
-        "author": "doimet",
         "name": "Robtex",
-        "references": ["https://www.robtex.com"],
         "description": "robtex查询",
+        "references": ["https://www.robtex.com"],
     }
 
     def domain(self) -> dict:

@@ -1,17 +1,18 @@
 # -*-* coding:UTF-8
-import functools
 import os
 import sys
 import time
 import yaml
 import threading
 import importlib
+import functools
 from pathlib import Path
 from core.request import Request
+from urllib.parse import urlparse
 from core.base import PluginBase, PluginObject, Logging, YamlPoc
-from core.common import get_table_form, merge_ip_segment
+from core.common import get_table_form
 from core.common import merge_same_data, keep_data_format
-from concurrent.futures import ThreadPoolExecutor, as_completed, wait, ALL_COMPLETED, FIRST_EXCEPTION
+from concurrent.futures import ThreadPoolExecutor, as_completed, wait, ALL_COMPLETED
 
 
 class Application:
@@ -33,15 +34,17 @@ class Application:
     def setup(self):
         """ 判断dataset中是否有数据 有数据表示不是第一次运行 需要从dataset中提取数据当输入 """
         if self.dataset:
-            target_list = self.build_target(self.dataset)
+            target_list = self.data_handle(self.dataset)
             self.dataset = []
-        else:
+        elif 'input' in self.options.keys():
             target_list = self.options.pop('input')
+        else:
+            return
 
         for target_tuple in target_list:
             self.log.root(f"Target: {target_tuple[1]}")
             threading.Thread(target=self.on_monitor, daemon=True).start()
-            status, message = self.check_is_live(*target_tuple)
+            status, message = self.check_target(*target_tuple)
             if status:
                 content = self.job_execute(target_tuple)
                 if content:
@@ -49,14 +52,13 @@ class Application:
             else:
                 self.log.error(message)
 
-    def shows(self, attribute=None):
+    def shows(self, att=None):
         """ 获取插件列表 """
         show_list = []
         base_path = os.path.join('plugins', self.options['command'])
         if 'input' in self.options.keys() and self.options['input']:
-            attribute = self.options['input'][0][0]
-
-        for file_path, file_name, file_ext in self.get_plugin_list(base_path, self.options['plugin'], attribute):
+            att = self.options['input'][0][0]
+        for file_path, file_name, file_ext in self.get_plugin_list(base_path, self.options['plugin'], att):
             plugin_obj = self.get_plugin_object(os.path.join(file_path, file_name + file_ext))
 
             plugin_info = plugin_obj.__info__
@@ -80,7 +82,6 @@ class Application:
                     },
                     {
                         '插件': file_name,
-                        '作者': plugin_info['author'],
                         '名称': plugin_info['name'],
                         '描述': plugin_info['description'],
                         '支持': ','.join(inner_method),
@@ -136,11 +137,10 @@ class Application:
             self.log.echo(r" \____/\____/\_/  \|\____/\____/\____/\____\ ")
             self.log.echo("")
             if len(self.options['plugin']) == 1:
-                prompt = plugin_name = self.options['plugin'][0]
-                obj = self.search_plugin_object(base_path, plugin_name, target_tuple)
+                match_result = self.search_plugin_object(base_path, self.options['plugin'], target_tuple)
+                obj, prompt = match_result[0][2], self.options['plugin'][0]
             else:
-                prompt = 'localhost'
-                obj = None
+                obj, prompt = None, 'localhost'
 
             while True:
                 keyword = input(f'\r{150 * " "}\r[{prompt} \033[0;31m~\033[0m]# ')
@@ -171,36 +171,19 @@ class Application:
                         self.event.clear()
                         self.echo_handle(name=prompt, data=res)
                     else:
-                        self.log.warn('not found plugin')
+                        self.log.warn('Not Found Plugin')
                 elif command == 'use':
-                    obj = self.search_plugin_object(base_path, args[0], target_tuple)
-                    if obj:
-                        prompt = args[0]
+                    self.options['plugin'] = (args[0],)
+                    match_result = self.search_plugin_object(base_path, self.options['plugin'], target_tuple)
+                    if len(match_result) == 1:
+                        obj, prompt = match_result[0][2], match_result[0][1]
+                    elif len(match_result) > 1:
+                        obj, prompt = None, match_result[0][0].replace('\\', '-')
+                        self.log.info(f'Found Plugin: {"、".join([_[1] for _ in match_result])}')
                     else:
-                        self.log.warn('not found plugin')
+                        self.log.warn('Not Found Plugin')
                 elif command in ['info']:
                     if obj:
-                        obj.log.info('内置方法:')
-                        function_dict = {}
-                        module_object = importlib.import_module("core.utils")
-                        for method_name in dir(module_object):
-                            if method_name[0] != '_':
-                                class_attr_obj = getattr(module_object, method_name)
-                                if type(class_attr_obj).__name__ == 'function' and class_attr_obj.__doc__:
-                                    description = class_attr_obj.__doc__
-                                    if any(x.isupper() for x in method_name):
-                                        continue
-                                    function_dict[description] = method_name
-
-                        if function_dict:
-                            inner_method = [
-                                {
-                                    '方法': v,
-                                    '描述': k
-                                } for k, v in function_dict.items()
-                            ]
-                            tb = get_table_form(inner_method, rank=False)
-                            obj.log.echo(tb)
                         self.log.info('插件方法:')
                         custom_method = {}
                         for func_name in obj.__decorate__:
@@ -209,7 +192,7 @@ class Application:
                         tb = get_table_form([custom_method], layout='vertical', title=['方法', '描述'], rank=False)
                         self.log.echo(tb)
                     else:
-                        self.log.warn('not found plugin')
+                        self.log.warn('Not Found Plugin')
                 elif command in ['list']:
                     self.shows()
                 else:
@@ -228,29 +211,21 @@ class Application:
                     for target_tuple in taskset:
                         if target_tuple in cache:
                             continue
-                        for file_path, file_name, file_ext in self.get_plugin_list(
-                                base_path,
-                                self.options['plugin'],
-                                target_tuple[0]
-                        ):
-                            plugin_obj = self.get_plugin_object(os.path.join(file_path, file_name + file_ext))
-                            if target_tuple[0] not in dir(plugin_obj):
+                        match_result = self.search_plugin_object(base_path, self.options['plugin'], target_tuple)
+                        for plugin_path, plugin_name, plugin_object in match_result:
+                            if target_tuple[0] not in dir(plugin_object):
                                 continue
                             self.job_total += 1
-                            future = executor.submit(self.job_func, file_name, target_tuple, plugin_obj)
+                            future = executor.submit(self.job_func, plugin_name, target_tuple, plugin_object)
                             future.add_done_callback(self.on_finish)
                             task_list.append(future)
+
                         cache.add(target_tuple)
-                    # wait(task_list, return_when=FIRST_EXCEPTION)
-                    # # 反向序列化之前塞入的任务队列，并逐个取消
-                    # for task in reversed(task_list):
-                    #     task.cancel()
                     wait(task_list, return_when=ALL_COMPLETED)
                     for future in as_completed(task_list):
                         result.append(future.result())
-                    taskset = self.build_target(result)
+                    taskset = self.data_handle(result)
                     depth -= 1
-            # result = list(chain(*list(filter(lambda x: x is not None, result))))
             result = self.final_handle(result)
             data = keep_data_format(merge_same_data(result, len(result), {}))
             return data
@@ -262,15 +237,20 @@ class Application:
         for ip in (res or []):
             ip_list.append(ip)
         if ip_list:
-            segment_list = merge_ip_segment(ip_list)
-            if segment_list:
-                data.append({'网段信息': segment_list})
+            # segment_list = merge_ip_segment(ip_list)
+            # if segment_list:
+            #     data.append({'网段信息': segment_list})
+            pass
         return data
 
-    def build_target(self, data):
-        """ 生成目标 """
+    def data_handle(self, data):
+        """ 数据处理 """
+        target_list = []
         for subdomain in self.extract_data('subdomain', data, []):
-            yield 'url', 'http://{}'.format(subdomain)
+            target_list.append(('url', 'http://{}'.format(subdomain)))
+        for url in self.extract_data('url', data, []):
+            target_list.append(('url', url))
+        return target_list
 
     def extract_data(self, key, data, res=None):
         """提取数据 """
@@ -287,60 +267,19 @@ class Application:
                 self.extract_data(key, v, res)
         return res
 
-    def check_is_live(self, _key, _value):
+    @staticmethod
+    def check_target(key, value):
         """
         检测目标指标:
         1.检测目标是否存活
-        2.检测目标是否是蜜罐
         """
-        if _key == 'url':
-            request = Request({}, {})
+        if key == 'url':
             try:
-                r = request.request(method="get", url=_value, timeout=15)
-                if self.check_is_honeypot(r.text):
-                    return False, 'the target is honeypot'
+                request = Request({}, {})
+                request.request(method="get", url=value, timeout=15)
             except Exception as e:
                 return False, 'the target cannot access'
         return True, 'access normal'
-
-    def check_is_honeypot(self, content):
-        """ 简单蜜罐检测 后续需要优化 """
-        code_list = [
-            """
-windows--2017
-write = system,call,log,verbose,command,agent,user,originate
-www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
-},
-荣耀立方
--->
-</p>
-</body></html>
-            """,
-            """
-WWW-Authenticate: Basic realm="NETGEAR DGN2200"
-            """,
-            """
-var TAB_CODE=9
-var DEL_CODE=46
-var BS_CODE=8
-            """,
-            """
- <title>Openfire Admin Console</title>
- <title>Openfire Console d'Administration: Configuration du Serveur</title>
- <title>Openfire Setup</title>
-            """
-        ]
-        if any([True if _ in content else False for _ in code_list]):
-            return True
-        return False
-
-    def has_attribute(self, attribute):
-        plugin_list = self.get_plugin_list('plugins', self.options['plugin'], attribute)
-        for file_path, file_name, file_ext in plugin_list:
-            plugin_obj = self.get_plugin_object(os.path.join(file_path, file_name + file_ext))
-            if attribute in dir(plugin_obj):
-                return True
-        return False
 
     def echo_handle(self, name, data=None, key='result'):
         """ 数据回显处理 """
@@ -355,7 +294,7 @@ var BS_CODE=8
             table = get_table_form(data)
             self.log.child(table)
         elif isinstance(data, dict):
-            if not all(map(lambda x: isinstance(x, str) or isinstance(x, int), data.values())):
+            if all(map(lambda x: isinstance(x, dict) or isinstance(x, list), data.values())):
                 for n, (k, v) in enumerate(data.items()):
                     name = f'{name}' if n == 0 else ''
                     self.echo_handle(name=name, data=v, key=k)
@@ -368,26 +307,17 @@ var BS_CODE=8
         """ 任务函数 """
         thread_object = threading.current_thread()
         self.next_job = thread_object.name = plugin_name
+        time.sleep(0.1)
         try:
             if plugin_name in self.config.keys():
                 if self.config[plugin_name].get('enable', False):
                     """ 指定插件时 判断插件是否被禁用 并打印提示 """
                     raise Exception(f'The plug-in is disabled')
-            # 开始处理传入插件内的参数
-            options = self.options
-            # 停止处理传入插件内的参数
-            obj = plugin_object(
-                options,
-                self.config,
-                {
-                    'key': target_tuple[0],
-                    'value': target_tuple[1],
-                },
-                self.event,
-                self.threshold
-            )
-            data = getattr(obj, target_tuple[0])()
-            return data
+            if plugin_object.__condition__():
+                data = getattr(plugin_object, target_tuple[0])()
+                return data
+            else:
+                self.log.debug(f'指纹不匹配 (plugin:{plugin_name})')
         except Exception as e:
             self.log.warn(f'{str(e)} (plugin:{plugin_name})')
 
@@ -422,16 +352,30 @@ var BS_CODE=8
 
     def search_plugin_object(self, base_path, plugin_name=None, target=None):
         """ 通过插件名称获取插件对象 """
-        for file_path, file_name, file_ext in self.get_plugin_list(base_path, (plugin_name, ), target[0]):
-            plugin_object = self.get_plugin_object(os.path.join(file_path, file_name + file_ext))
-            obj = plugin_object(
+        match_result = []
+        for file_path, file_name, file_ext in self.get_plugin_list(base_path, plugin_name, target[0]):
+            plugin_class = self.get_plugin_object(os.path.join(file_path, file_name + file_ext))
+            target_dict = {'key': target[0], 'value': target[1], 'ip': '', 'port': '', 'url': '', 'host': ''}
+            if 'http://' in target[1] or 'https://' in target[1]:
+                url_obj = urlparse(target[1])
+                target_dict.update(
+                    {
+                        'url': f'{url_obj.scheme}://{url_obj.hostname}',
+                        'scheme': url_obj.scheme,
+                        'host': url_obj.netloc,
+                        'ip': url_obj.hostname,
+                        'port': url_obj.port if url_obj.port else (443 if url_obj.scheme == 'https' else 80)
+                    }
+                )
+            plugin_object = plugin_class(
                 self.options,
                 self.config,
-                {'key': target[0], 'value': target[1]},
+                target_dict,
                 self.event,
                 self.threshold
             )
-            return obj
+            match_result.append((file_path, file_name, plugin_object))
+        return match_result
 
     @staticmethod
     def list_path_file(path):
@@ -440,7 +384,7 @@ var BS_CODE=8
             for filename in filenames:
                 yield root, filename
 
-    def get_plugin_list(self, path: str, names: tuple, attribute=None):
+    def get_plugin_list(self, path: str, names: tuple, att=None):
         """ 获取插件列表 """
         is_exclude = all([True if _[0] == '!' else False for _ in names])  # 过滤插件前置判断
 
@@ -449,7 +393,7 @@ var BS_CODE=8
             file_stem, file_ext = Path(filename).stem, Path(filename).suffix
             if file_ext in ['.py', '.yml'] and not filename.startswith('_'):
                 plugin_obj = self.get_plugin_object(os.path.join(file_path, filename))
-                if attribute and attribute not in dir(plugin_obj):
+                if att and att not in dir(plugin_obj):
                     continue
                 elif names:
                     for plugin in names:
@@ -507,15 +451,15 @@ var BS_CODE=8
         2.更新插件信息
         """
         plugin_object = self.build_plugin_object()
+
         if file_path.endswith('.yml'):
             plugin = YamlPoc
             with open(file_path, encoding='utf8') as f:
                 content = yaml.load(f, Loader=yaml.FullLoader)
             plugin.__info__ = {
                 'name': content['name'],
-                'author': content['detail'].get('author', ''),
+                'description': '',
                 'references': content['detail'].get('links', []),
-                'description': ''
             }
             plugin.__vars__ = content.get('set', {})
             plugin.__rule__ = content['rules']

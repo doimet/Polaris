@@ -1,12 +1,10 @@
 # -*-* coding:UTF-8
-import httpx
 import random
 import _socket
 import hashlib
-import requests.packages.urllib3
+import httpx
+import httpx_cache
 from urllib.parse import urljoin
-
-requests.packages.urllib3.disable_warnings()
 
 
 class RewriteString(str):
@@ -56,24 +54,29 @@ class Request:
     def __init__(self, target=None, config=None):
         self.target = target
         self.config = config
-        self.url_cache = {}
-        self.current_url = ''
-        self.headers = {
-            'User-Agent': RandomUserAgent.get(),
-            'Content-Type': 'application/x-www-form-urlencoded',
-        }
-        self.headers.update(config['network']['headers'] if 'network' in config.keys() else {})
-        self.client = httpx.Client(verify=False)
-        self.async_client = httpx.AsyncClient(verify=False)
+        if config:
+            self.headers = config['network']['headers']
+            if not self.headers.get('User-Agent', None):
+                self.headers['User-Agent'] = RandomUserAgent.get()
+            self.proxies = {f'{k}://': v for k, v in config['network']['proxies'].items() if v}
+        else:
+            self.headers, self.proxies = None, None
+        self.client = httpx_cache.Client(
+            verify=False,
+            headers=self.headers,
+            proxies=self.proxies,
+            cache=httpx_cache.FileCache(cache_dir='cache')
+        )
+        self.async_client = httpx_cache.AsyncClient(
+            verify=False,
+            headers=self.headers,
+            proxies=self.proxies,
+            cache=httpx_cache.FileCache(cache_dir='cache')
+        )
 
-    def request(self, method='get', url=None, path=None, cache=False, *args, **kwargs):
+    def request(self, method='get', url=None, path=None, *args, **kwargs):
         if not url and path and self.target:
             url = urljoin(self.target.value, path)
-        if url in self.url_cache and cache:
-            return self.url_cache[url]
-        self.current_url = url
-        self.headers.update(kwargs.get('headers', {}))
-        kwargs.update({'headers': self.headers})
         try:
             response = self.client.request(method=method, url=url, *args, **kwargs)
         except httpx.ConnectError as connect_error:
@@ -85,17 +88,12 @@ class Request:
             )
         except Exception as e:
             raise Exception(e)
-        self.url_cache[url] = response
         return self.decorate_response(response)
 
-    async def async_http(self, method='get', url=None, path=None, cache=False, *args, **kwargs):
+    async def async_http(self, method='get', url=None, path=None, *args, **kwargs):
+
         if not url and path and self.target:
             url = urljoin(self.target.value, path)
-        if url in self.url_cache and cache:
-            return self.url_cache[url]
-        self.current_url = url
-        self.headers.update(kwargs.get('headers', {}))
-        kwargs.update({'headers': self.headers})
         try:
             response = await self.async_client.request(method=method, url=url, *args, **kwargs)
         except httpx.ConnectError as connect_error:
@@ -107,7 +105,6 @@ class Request:
             )
         except Exception as e:
             raise Exception(e)
-        self.url_cache[url] = response
         return self.decorate_response(response)
 
     @staticmethod
@@ -131,21 +128,7 @@ class Request:
         response.md5 = hashlib.md5(response.content).hexdigest()
         response.length = self.unit_convert(content_length)
         response.body = response.text
-        response.condition = self.condition
         return response
-
-    @staticmethod
-    def condition(exp):
-        return exp
-
-
-class RandomProxy:
-    """ 随机代理 """
-
-    @staticmethod
-    def get():
-        proxy = ''
-        return {'http': proxy, 'https': proxy}
 
 
 class RandomUserAgent:

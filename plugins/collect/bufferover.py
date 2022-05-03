@@ -3,9 +3,9 @@
 
 class Plugin(Base):
     __info__ = {
-        "author": "doimet",
-        "references": ["https://dns.bufferover.run"],
+        "name": "bufferover",
         "description": "bufferover查询",
+        "references": ["https://dns.bufferover.run"],
     }
 
     def domain(self) -> dict:

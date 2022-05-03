@@ -1,0 +1,19 @@
+{
+  "collect": "信息搜集",
+  "exploit": "漏洞利用",
+  "DomainList": "域名列表",
+  "SubdomainList": "子域名列表",
+  "ICPInfo": "备案信息",
+  "IPInfo": "IP信息",
+  "APPInfo": "应用信息",
+  "WebSiteInfo": "网站信息",
+  "InvestInfo": "对外投资",
+  "BranchInfo": "分支机构",
+  "HoldsInfo": "控股企业",
+  "BaseInfo": "基本信息",
+  "CompanyInfo": "公司信息",
+  "HashPlaintext": "哈希明文",
+  "EmailList": "邮箱列表",
+  "DataList": "数据列表",
+  "LoopholeInfo": "漏洞信息"
+}

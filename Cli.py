@@ -14,6 +14,8 @@ from core.app import Application
 os.system('')
 warnings.filterwarnings("ignore")
 
+config = toml.load(os.path.join('conf', 'setting.toml'))
+
 
 def cost_time(func):
     """ 计算使用时间 """
@@ -34,7 +36,7 @@ def show_banner(func):
 
     def wrapper(options, processors):
         print(f"""
-    \033[0;31mPolaris - 渗透测试框架 1.3.0\033[0m
+    \033[0;31mPolaris - 渗透测试框架 {config["general"]["version"]}\033[0m
 
  =# Author: 浮鱼
  =# Github: https://github.com/doimet/Polaris
@@ -136,7 +138,6 @@ def process_pipeline(processors, **kwargs):
 @show_banner
 def main(options, processors):
     check_environment()
-    config = toml.load(os.path.join('conf', 'setting.toml'))
     app = Application(config=config, options=options)
     for processor in processors:
         gc.collect()

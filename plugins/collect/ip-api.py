@@ -3,10 +3,9 @@
 
 class Plugin(Base):
     __info__ = {
-        "author": "doimet",
         "name": "IP-API",
-        "references": ["http://ip-api.com"],
         "description": "获取网站的物理地址",
+        "references": ["http://ip-api.com"],
     }
 
     def ip(self) -> dict:
@@ -19,7 +18,7 @@ class Plugin(Base):
             result = r.json()
             if result['status'] == 'success':
                 return {
-                    'IpInfo': {
+                    'IPInfo': {
                         'address': result['country'] + (f', {result["regionName"]}' if result['regionName'] else ' ') + (
                             f', {result["city"]}' if result['city'] else ''),
                         'isp': result['isp'],

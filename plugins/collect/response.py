@@ -4,9 +4,9 @@ import re
 
 class Plugin(Base):
     __info__ = {
-        "author": "doimet",
-        "references": ["-"],
+        "name": "response",
         "description": "response提取子域名",
+        "references": ["-"],
     }
 
     def domain(self) -> dict:

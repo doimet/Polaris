@@ -4,10 +4,9 @@ import lxml.etree
 
 class Plugin(Base):
     __info__ = {
-        "author": "doimet",
         "name": "ICP备案查询网",
-        "references": ["https://www.beianx.cn"],
         "description": "备案查询",
+        "references": ["https://www.beianx.cn"],
     }
 
     def icp(self) -> dict:

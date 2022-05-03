@@ -4,9 +4,9 @@ import lxml.etree
 
 class Plugin(Base):
     __info__ = {
-        "author": "doimet",
-        "references": ["http://www.sitedossier.com"],
+        "name": "sitedossier",
         "description": "sitedossier查询",
+        "references": ["http://www.sitedossier.com"],
     }
 
     def domain(self) -> dict:

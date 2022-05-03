@@ -4,9 +4,9 @@ import re
 
 class Plugin(Base):
     __info__ = {
-        "author": "doimet",
-        "references": ["https://www.robtex.com"],
+        "name": "crossdomain",
         "description": "crossdomain提取子域名",
+        "references": ["https://www.robtex.com"],
     }
 
     def domain(self) -> dict:

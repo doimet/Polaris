@@ -4,10 +4,9 @@ import lxml.etree
 
 class Plugin(Base):
     __info__ = {
-        "author": "doimet",
         "name": "IP138",
-        "references": ["https://site.ip138.com"],
         "description": "IP138查询",
+        "references": ["https://site.ip138.com"],
     }
 
     def domain(self) -> dict:

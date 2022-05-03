@@ -3,9 +3,9 @@
 
 class Plugin(Base):
     __info__ = {
-        "author": "doimet",
-        "references": ["https://www.cmd5.com"],
+        "name": "CMD5",
         "description": "CMD5解密hash",
+        "references": ["https://www.cmd5.com"],
     }
 
     def hash(self) -> dict:

@@ -3,10 +3,9 @@
 
 class Plugin(Base):
     __info__ = {
-        "author": "doimet",
         "name": "Securitytrails",
-        "references": ["https://api.securitytrails.com"],
         "description": "securitytrails查询",
+        "references": ["https://api.securitytrails.com"],
     }
 
     def domain(self) -> dict:

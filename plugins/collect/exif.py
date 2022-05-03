@@ -5,9 +5,9 @@ from geopy.geocoders import Nominatim
 
 class Plugin(Base):
     __info__ = {
-        "author": "doimet",
-        "references": ["-"],
+        "name": "Exif",
         "description": "获取图片中隐藏的信息",
+        "references": ["-"],
     }
 
     def image(self) -> dict:

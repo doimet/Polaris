@@ -3,12 +3,22 @@
 # Default Select: Windows 509 and Linux 1024, windows <= 64
 # ----------------------------------------------------------------------------------------------------------------------
 [general]
+version = "1.4.0"
 depth = 1
 threads = 100
 asyncio = 50
 
+# ----------------------------------------------------------------------------------------------------------------------
+# Network Config
+# ----------------------------------------------------------------------------------------------------------------------
+
 [network]
-headers = {}
+    [network.headers]
+        "User-Agent" = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36 Edg/100.0.1185.44"
+        "Content-Type" = "application/x-www-form-urlencoded"
+    [network.proxies]
+        http = ""
+        https = ""
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Plugin Config
@@ -59,4 +69,8 @@ link = "https://aiqicha.baidu.com"
 key = ""
 link = "https://zoomeye.org"
 
+[fofa]
+key = ""
+email = ""
+link = "https://fofa.info"
 

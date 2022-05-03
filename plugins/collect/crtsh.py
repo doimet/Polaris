@@ -4,10 +4,9 @@ import lxml.etree
 
 class Plugin(Base):
     __info__ = {
-        "author": "doimet",
         "name": "Crt",
-        "references": ["https://crt.sh"],
         "description": "证书查询子域名",
+        "references": ["https://crt.sh"],
     }
 
     def domain(self) -> dict:

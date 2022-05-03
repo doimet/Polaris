@@ -95,8 +95,7 @@
   ```
   build_web_shell(lang: str) -> tuple
   传入生成的脚本语言
-  返回webshell代码、webshell密码、webshell验证代码
-  注: 目前只支持php、asp、aspx三种语言, 后面会添加jsp
+  返回随机名称、webshell代码、webshell密码、验证字符串
   ```
 + `is_exist_waf`: 判断Waf
   ```
@@ -130,10 +129,10 @@
 
 class Plugin(Base):
     __info__ = {
-        "author": "作者",
         "name": "插件名称",
-        "references": ["来源"],
         "description": "描述信息",
+        "references": ["来源"],
+
     }
 
     def domain(self) -> dict:
@@ -147,12 +146,17 @@ class Plugin(Base):
 
 class Plugin(Base):
     __info__ = {
-        "author": "作者",
         "name": "插件名称",
-        "references": ["来源"],
+        "keyword": "搜索语法",
         "description": "描述信息",
-    }
+        "references": ["来源"],
 
+    }
+    
+    def __condition__(self):
+        """ 执行条件 """
+        ...
+    
     def url(self) -> dict:
         """ 验证代码 """
         ...

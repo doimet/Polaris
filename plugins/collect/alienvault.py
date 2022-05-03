@@ -3,10 +3,9 @@
 
 class Plugin(Base):
     __info__ = {
-        "author": "doimet",
         "name": "Alienvault",
-        "references": ["https://otx.alienvault.com"],
         "description": "alienvault查询",
+        "references": ["https://otx.alienvault.com"],
     }
 
     def domain(self) -> dict:

@@ -4,9 +4,9 @@ import re
 
 class Plugin(Base):
     __info__ = {
-        "author": "doimet",
-        "references": ["-"],
+        "name": "xhttp",
         "description": "收集网站标题",
+        "references": ["-"],
     }
 
     def url(self) -> dict:
@@ -14,10 +14,10 @@ class Plugin(Base):
         match = re.search('<title>(.*?)</title>', r.text, re.IGNORECASE)
         title = match.group(1).strip() if match else '-'
         return {
-            '网站信息': {
-                '网址': self.target.value,
-                '网站标题': title,
-                '响应大小': r.length,
-                '状态码': r.status_code,
+            'WebSiteInfo': {
+                'url': self.target.value,
+                'title': title,
+                'size': r.length,
+                'code': r.status_code,
             }
         }

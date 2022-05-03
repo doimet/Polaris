@@ -3,9 +3,9 @@
 
 class Plugin(Base):
     __info__ = {
-        "author": "doimet",
-        "references": ["https://subdomains.whoisxmlapi.com"],
+        "name": "whoisxmlapi",
         "description": "whoisxmlapi查询",
+        "references": ["https://subdomains.whoisxmlapi.com"],
     }
 
     def domain(self) -> dict:

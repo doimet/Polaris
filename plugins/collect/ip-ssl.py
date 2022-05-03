@@ -6,9 +6,9 @@ import asn1crypto.x509
 
 class Plugin(Base):
     __info__ = {
-        "author": "doimet",
-        "references": ["-"],
+        "name": "SSL",
         "description": "通过SSL证书获取子域名",
+        "references": ["-"],
     }
 
     def ip(self) -> dict:

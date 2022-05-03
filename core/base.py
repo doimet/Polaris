@@ -12,7 +12,10 @@ import hashlib
 import os.path
 import logging
 import functools
+import contextlib
+import lxml.etree
 import urllib.parse
+from core.common import parse_raw_request
 from core.request import Request
 from Cryptodome.Hash import SHA256
 from Cryptodome.PublicKey import RSA
@@ -163,7 +166,6 @@ class EchoQueryExecute:
         self.create()
 
     def create(self):
-        self.session.headers.update({"Content-Type": "application/json"})
         self.session.request(
             method="post",
             url="https://interact.sh/register",
@@ -172,6 +174,7 @@ class EchoQueryExecute:
                 "secret-key": self.secret,
                 "correlation-id": self.correlation_id
             },
+            headers={"Content-Type": "application/json"}
         )
 
     def get_subdomain(self):
@@ -278,11 +281,9 @@ class AsyncioExecute(object):
 
     async def work(self, func, args):
         async with self.lock:
-            try:
+            with contextlib.suppress(Exception):
                 res = await functools.partial(func, *args)()
                 return res
-            except Exception as e:
-                pass
 
     def on_finish(self, future):
         if self.threshold:
@@ -310,10 +311,8 @@ class PluginBase(Request):
 
     __info__ = {
         "name": "-",
-        "author": "-",
         "description": "-",
         "references": ["-"],
-        "datetime": "-"
     }
 
     def __init__(self, options, config, target, event, threshold):
@@ -354,6 +353,50 @@ class PluginBase(Request):
                 method.append(k)
         return method
 
+    def __condition__(self):
+        return True
+
+    def condition(self, matches, logic=None):
+        condition = []
+        for index, match in enumerate(matches):
+            try:
+                r = self.request(method='get', url=urllib.parse.urljoin(self.target.value, match.get('path', '.')))
+                search, dom = match.get('search', 'all'), lxml.etree.HTML(r.content)
+                if search == 'title':
+                    content = str(dom.xpath('/html/head/title/text()')[0])
+                elif search == 'headers':
+                    content = "\r\n".join(f"{k}: {v}" for k, v in r.headers.items())
+                elif search == 'body':
+                    content = lxml.etree.tostring(dom.xpath('/html/body')[0]).decode()
+                elif search == 'cookies':
+                    content = r.headers.get('set-cookie')
+                elif search == 'meta':
+                    content = ';'.join(dom.xpath('//meta/@content'))
+                elif search == 'script':
+                    content = ''.join(lxml.etree.tostring(script).decode() for script in dom.xpath('//script'))
+                else:
+                    content = r.text
+
+                condition.append(
+                    any([
+                        'md5' in match.keys() and r.md5 == match['md5'],
+                        # 'hash' in match.keys() and r.hash == match['hash'],
+                        'keyword' in match.keys() and (
+                                (isinstance(match['keyword'], str) and match['keyword'] in content) or
+                                (isinstance(match['keyword'], list) and all([_ in content for _ in match['keyword']]))
+                        ),
+                        'status' in match.keys() and r.status_code == match['keyword']
+                    ])
+                )
+            except Exception as e:
+                condition.append(False)
+
+        if logic:
+            for index, value in enumerate(condition):
+                logic = logic.replace(str(index), str(value))
+            return eval(logic)
+        return any(condition)
+
 
 class YamlPoc(PluginBase):
     """ xray poc模板 """
@@ -371,18 +414,16 @@ class YamlPoc(PluginBase):
             if 'request' in str(v):
                 v = v.repalce('request', 'target')
             vars[k] = eval(f'self.{v}')
-
         for k, v in self.__rule__.items():
             options = {
                 "method": v['request']['method'],
                 "path": v['request']['path'],
-                "allow_redirects": v['request'].get('follow_redirects', True),
+                "follow_redirects": v['request'].get('follow_redirects', True),
                 "headers": v['request'].get('headers', {}),
                 "data": v['request'].get('body', {})
             }
             for i, j in vars.items():
                 options = json.loads(json.dumps(options).replace('{{' + i + '}}', str(j)))
-
             response = self.request(**options)
 
             def contains(src, value):

@@ -6,6 +6,7 @@ class Cli:
         self._w_depth = {}
         self._i_depth = {}
         self.params = {}
+        self.silent_args = None
 
     def command(self, description):
 
@@ -22,6 +23,7 @@ class Cli:
                     self._i_depth[func.__name__] = 1
 
                 if kwargs.get('FLAG', False):
+                    self._i_depth[func.__name__] = self._w_depth[func.__name__]
                     return description
                 else:
                     return func(cls, *args)
@@ -79,12 +81,18 @@ class Cli:
                     self._i_depth[func.__name__] += 1
                 else:
                     self._i_depth[func.__name__] = 1
+                # 方法调用 不产生交互
+                if not self.silent_args and args:
+                    self.silent_args = args
 
                 kwargs.update({name: attrs})
                 if (
                         self._w_depth[func.__name__] != 0 and
                         self._i_depth[func.__name__] % self._w_depth[func.__name__] == 0
                 ):
+                    if self.silent_args is not None:
+                        return func(cls, *self.silent_args)
+
                     kwargs = self.kwargs_handle(cls, kwargs)
                     for k, v in kwargs.items():
                         while True:
@@ -100,7 +108,7 @@ class Cli:
                                 default_value = v['type'](default_value)
                             if v['type'] not in [str, float, int, bool]:
                                 cls.log.warn(f"unknown type: {str(v['type'])}")
-                            elif len(v['choice']) != 0 and default_value not in v['choice']:
+                            elif len(v['choice']) != 0 and not default_value:
                                 cls.log.warn(f"invalid choice: {default_value}. (choose from {', '.join([str(_) for _ in v['choice']])})")
                             elif not default_value and v['required']:
                                 # 必备参数未传值需异常处理

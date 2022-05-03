@@ -3,9 +3,9 @@
 
 class Plugin(Base):
     __info__ = {
-        "author": "doimet",
-        "references": ["https://www.censys.io"],
+        "name": "ensys",
         "description": "censys查询",
+        "references": ["https://www.censys.io"],
     }
 
     def domain(self) -> dict:

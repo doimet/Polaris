@@ -5,10 +5,9 @@ import lxml.etree
 
 class Plugin(Base):
     __info__ = {
-        "author": "doimet",
         "name": "BGP",
-        "references": ["https://bgp.he.net"],
         "description": "BGP查询",
+        "references": ["https://bgp.he.net"],
     }
 
     def ip(self) -> dict:
@@ -21,7 +20,7 @@ class Plugin(Base):
             match = dom.xpath('//div[@id="ipinfo"]/table/tbody/tr/td//text()')
             if match:
                 return {
-                    "IpInfo": {
+                    "IPInfo": {
                         "asn": match[0],
                         "segment": match[1],
                         "isp": match[2]

@@ -4,10 +4,9 @@ import re
 
 class Plugin(Base):
     __info__ = {
-        "author": "doimet",
         "name": "Circl",
-        "references": ["https://www.circl.lu"],
         "description": "circl查询",
+        "references": ["https://www.circl.lu"],
     }
 
     def domain(self) -> dict:

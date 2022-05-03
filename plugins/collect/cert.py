@@ -4,9 +4,9 @@ import ssl
 
 class Plugin(Base):
     __info__ = {
-        "author": "doimet",
-        "references": ["-"],
+        "name": "Cert",
         "description": "通过SSL证书提取子域名",
+        "references": ["-"],
     }
 
     def domain(self) -> dict:

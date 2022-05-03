@@ -3,10 +3,9 @@
 
 class Plugin(Base):
     __info__ = {
-        "author": "doimet",
         "name": "IP-info",
-        "references": ["http://ipinfo.io"],
         "description": "通过ipinfo获取信息",
+        "references": ["http://ipinfo.io"],
     }
 
     def ip(self) -> dict:
@@ -21,7 +20,7 @@ class Plugin(Base):
         if r.status_code == 200:
             response = r.json()
             return {
-                'IpInfo': {
+                'IPInfo': {
                     "国家": response['country'],
                     "城市": response['city'],
                     "地区": response['region'],
