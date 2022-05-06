@@ -227,7 +227,7 @@ class Application:
                     taskset = self.data_handle(result)
                     depth -= 1
             result = self.final_handle(result)
-            data = keep_data_format(merge_same_data(result, len(result), {}))
+            data = keep_data_format(merge_same_data(result, {}))
             return data
 
     def final_handle(self, data):
@@ -273,6 +273,7 @@ class Application:
         检测目标指标:
         1.检测目标是否存活
         """
+        return True, ''
         if key == 'url':
             try:
                 request = Request({}, {})
@@ -326,7 +327,7 @@ class Application:
             self.job_count += 1
             thread = threading.current_thread()
             self.last_job = thread.name
-            data = merge_same_data(worker.result(), 1, {})
+            data = merge_same_data(worker.result(), {})
             # 如进入控制台模式则需跳过此逻辑
             if not self.options['console']:
                 self.echo_handle(name=thread.name, data=data)

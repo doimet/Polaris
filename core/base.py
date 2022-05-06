@@ -356,7 +356,7 @@ class PluginBase(Request):
     def __condition__(self):
         return True
 
-    def condition(self, matches, logic=None):
+    def condition(self, matches=[], logic=None):
         condition = []
         for index, match in enumerate(matches):
             try:
@@ -392,6 +392,8 @@ class PluginBase(Request):
                 condition.append(False)
 
         if logic:
+            if isinstance(logic, bool):
+                return logic
             for index, value in enumerate(condition):
                 logic = logic.replace(str(index), str(value))
             return eval(logic)

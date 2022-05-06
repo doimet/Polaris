@@ -6,36 +6,37 @@ from itertools import chain
 # from core.base import Interval
 
 
-def merge_same_data(data, length, result):
-    """ 合并相同数据 """
-
+def merge_same_data(data, result):
     if isinstance(data, list):
         result = {}
         for one in data:
-            merge_same_data(one, len(data), result)
+            merge_same_data(one, result)
         return result
     elif isinstance(data, dict):
         for key, value in data.items():
-            if key not in result.keys():
-                result[key] = []
             if not value:
                 continue
-            if isinstance(value, list) and len(value) != 0:
+            if isinstance(value, list):
+                if key not in result.keys():
+                    result[key] = []
                 """ 数据去重 """
-                try:
+                if isinstance(value[0], dict):
                     value = [dict(t) for t in set([tuple(d.items()) for d in value])]
-                except:
-                    if isinstance(value[0], list):
-                        value = [_ for _ in chain(*value) if _ != '']
-                    if isinstance(value[0], str):
-                        value = list(set(value))
+                if isinstance(value[0], list):
+                    value = [_ for _ in chain(*value) if _ != '']
+                if isinstance(value[0], str):
+                    value = list(set(value))
                 for i in value:
                     result[key].append(i)
+            elif isinstance(value, dict):
+                if key not in result.keys():
+                    result[key] = {}
+                result[key].update(value)
             else:
-                if length == 1:
+                if key not in result.keys():
                     result[key] = value
-                else:
-                    result[key].append(value)
+                elif value != result[key]:
+                    result[key] = [value, result[key]]
         return result
     else:
         return data
