@@ -10,8 +10,7 @@ from pathlib import Path
 from core.request import Request
 from urllib.parse import urlparse
 from core.base import PluginBase, PluginObject, Logging, YamlPoc
-from core.common import get_table_form
-from core.common import merge_same_data, keep_data_format
+from core.common import merge_same_data, keep_data_format, get_table_form, merge_ip_segment
 from concurrent.futures import ThreadPoolExecutor, as_completed, wait, ALL_COMPLETED
 
 
@@ -169,7 +168,7 @@ class Application:
                         self.event.set()
                         res = getattr(obj, target_tuple[0])()
                         self.event.clear()
-                        self.echo_handle(name=prompt, data=res)
+                        self.msg_handle(name=prompt, data=res)
                     else:
                         self.log.warn('Not Found Plugin')
                 elif command == 'use':
@@ -236,11 +235,16 @@ class Application:
         res = self.extract_data('ip', data, [])
         for ip in (res or []):
             ip_list.append(ip)
-        if ip_list:
-            # segment_list = merge_ip_segment(ip_list)
-            # if segment_list:
-            #     data.append({'网段信息': segment_list})
-            pass
+        # if ip_list:
+        #     segment_list = merge_ip_segment(ip_list)
+        #     if segment_list:
+        #         data.append({'网段信息': segment_list})
+        #     pass
+        """ 子域名处理 """
+        # res = self.extract_data('SubdomainList', data, [])
+        # for one in (res or []):
+        #     print(one)
+        #     self.update_date('SubdomainList', data, [])
         return data
 
     def data_handle(self, data):
@@ -253,7 +257,7 @@ class Application:
         return target_list
 
     def extract_data(self, key, data, res=None):
-        """提取数据 """
+        """ 提取数据 """
         if isinstance(data, str) or isinstance(data, int):
             return
         elif isinstance(data, list):
@@ -265,6 +269,10 @@ class Application:
                     res.append(v)
                     continue
                 self.extract_data(key, v, res)
+        return res
+
+    def update_date(self, key, value, res=None):
+        """ 更新数据 """
         return res
 
     @staticmethod
@@ -282,8 +290,8 @@ class Application:
                 return False, 'the target cannot access'
         return True, 'access normal'
 
-    def echo_handle(self, name, data=None, key='result'):
-        """ 数据回显处理 """
+    def msg_handle(self, name, data=None, key='result'):
+        """ 数据显示处理 """
         if not data:
             return
         if name:
@@ -298,7 +306,7 @@ class Application:
             if all(map(lambda x: isinstance(x, dict) or isinstance(x, list), data.values())):
                 for n, (k, v) in enumerate(data.items()):
                     name = f'{name}' if n == 0 else ''
-                    self.echo_handle(name=name, data=v, key=k)
+                    self.msg_handle(name=name, data=v, key=k)
             else:
                 self.log.child(f'{key}: 1 {name}')
                 table = get_table_form(data, layout='vertical')
@@ -318,7 +326,7 @@ class Application:
                 data = getattr(plugin_object, target_tuple[0])()
                 return data
             else:
-                self.log.debug(f'指纹不匹配 (plugin:{plugin_name})')
+                self.log.debug(f'执行条件不成立 (plugin:{plugin_name})')
         except Exception as e:
             self.log.warn(f'{str(e)} (plugin:{plugin_name})')
 
@@ -330,7 +338,7 @@ class Application:
             data = merge_same_data(worker.result(), {})
             # 如进入控制台模式则需跳过此逻辑
             if not self.options['console']:
-                self.echo_handle(name=thread.name, data=data)
+                self.msg_handle(name=thread.name, data=data)
 
     def on_monitor(self):
         """ 消息线程 """

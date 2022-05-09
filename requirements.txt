@@ -2,15 +2,15 @@ click~=8.0.1
 IPy==1.01
 toml~=0.10.2
 PyYAML~=6.0
-httpx~=0.22.0
+httpx~=0.21.3
 httpx_cache~=0.4.1
-beautifulsoup4
+beautifulsoup4~=4.10.0
 aiodns==3.0.0
 asn1crypto==1.4.0
 beautifulsoup4==4.10.0
 dnspython==2.1.0
 lxml==4.6.3
-xpython-whois==0.7.3
+python-whois==0.7.3
 cel-python~=0.1.5
 pycryptodomex~=3.12.0
 flashtext~=2.7
@@ -23,3 +23,7 @@ simhash~=2.0.0
 mmh3~=3.0.0
 exifread==2.3.2
 geopy==2.2.0
+prettytable~=2.2.0
+requests~=2.26.0
+urllib3~=1.26.9
+bs4~=0.0.1

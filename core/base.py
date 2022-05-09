@@ -518,11 +518,3 @@ class PluginObject(dict):
         return dict.__getitem__(self, item)
 
 
-class Interval(object):
-    def __init__(self):
-        self.st = bin(0)
-        self.ed = bin(0)
-
-    def change(self, new_st, new_ed):
-        self.st = new_st
-        self.ed = new_ed
