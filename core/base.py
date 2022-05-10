@@ -59,6 +59,7 @@ class Logging(logging.Logger):
         self.addHandler(stream_handler)
 
     def echo(self, msg, *args, **kwargs):
+        sys.stdout.write('\r' + 100 * ' ' + '\r')
         self._log(70, "{}".format(str(msg)), args, **kwargs)
 
     def debug(self, msg, *args, **kwargs):

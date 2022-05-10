@@ -1,4 +1,5 @@
 # -*-* coding:UTF-8
+import contextlib
 import os
 import sys
 import time
@@ -6,6 +7,7 @@ import yaml
 import threading
 import importlib
 import functools
+import dns.resolver
 from pathlib import Path
 from core.request import Request
 from urllib.parse import urlparse
@@ -29,25 +31,26 @@ class Application:
         self.metux = threading.Lock()
         self.event = threading.Event()
         self.event.set()
+        self.records = {}
 
     def setup(self):
         """ 判断dataset中是否有数据 有数据表示不是第一次运行 需要从dataset中提取数据当输入 """
         if self.dataset:
-            target_list = self.data_handle(self.dataset)
+            task_list = self.make_task(self.dataset)
             self.dataset = []
         elif 'input' in self.options.keys():
-            target_list = self.options.pop('input')
+            task_list = self.options.pop('input')
         else:
             return
 
-        for target_tuple in target_list:
-            self.log.root(f"Target: {target_tuple[1]}")
+        for task in task_list:
+            self.log.root(f"Target: {task[1]}")
             threading.Thread(target=self.on_monitor, daemon=True).start()
-            status, message = self.check_target(*target_tuple)
+            status, message = self.check_target(*task)
             if status:
-                content = self.job_execute(target_tuple)
+                content = self.job_execute(task)
                 if content:
-                    self.dataset.append({'root': target_tuple[1], 'content': {self.options['command']: content}})
+                    self.dataset.append({'root': task[1], 'content': {self.options['command']: content}})
             else:
                 self.log.error(message)
 
@@ -223,10 +226,10 @@ class Application:
                     wait(task_list, return_when=ALL_COMPLETED)
                     for future in as_completed(task_list):
                         result.append(future.result())
-                    taskset = self.data_handle(result)
+                    taskset = self.make_task(result)
                     depth -= 1
-            result = self.final_handle(result)
             data = keep_data_format(merge_same_data(result, {}))
+            data = self.final_handle(data)
             return data
 
     def final_handle(self, data):
@@ -241,14 +244,40 @@ class Application:
         #         data.append({'网段信息': segment_list})
         #     pass
         """ 子域名处理 """
-        # res = self.extract_data('SubdomainList', data, [])
-        # for one in (res or []):
-        #     print(one)
-        #     self.update_date('SubdomainList', data, [])
+
+        res = self.extract_data('SubdomainList', data, [])
+        if res:
+            self.next_job = 'subdomain analysis'
+            with ThreadPoolExecutor(max_workers=100) as executor:
+                value = executor.map(self.resolve_task, sum(res, []))
+                value = [_ for _ in value if _]
+                data = self.replace_date('SubdomainList', value, data)
         return data
 
-    def data_handle(self, data):
-        """ 数据处理 """
+    def resolve_task(self, one):
+        with contextlib.suppress(Exception):
+            subdomain = one["subdomain"]
+            if subdomain in self.records:
+                ips = self.records[subdomain]
+            else:
+                obj = dns.resolver.Resolver()
+                ips = obj.resolve(subdomain)
+                ips = [i.to_text() for i in ips]
+                self.records[subdomain] = ips
+            cdn = True if len(ips) > 1 else False
+            ip = ips[0] if len(ips) == 1 else ""
+            if one.get('ip') == ip:
+                one.update({'ip': ip, 'record': one.get('record'), 'cdn': cdn})
+            else:
+                if one.get('record') and one.get('ip'):
+                    record = [one['record']+one['ip']]
+                else:
+                    record = (one.get('record', '') + one.get('ip', '')).strip()
+                one.update({'ip': ip, 'record': record, 'cdn': cdn})
+            return one
+
+    def make_task(self, data):
+        """ 生成任务 """
         target_list = []
         for subdomain in self.extract_data('subdomain', data, []):
             target_list.append(('url', 'http://{}'.format(subdomain)))
@@ -259,7 +288,7 @@ class Application:
     def extract_data(self, key, data, res=None):
         """ 提取数据 """
         if isinstance(data, str) or isinstance(data, int):
-            return
+            return []
         elif isinstance(data, list):
             for one in data:
                 self.extract_data(key, one, res)
@@ -271,8 +300,19 @@ class Application:
                 self.extract_data(key, v, res)
         return res
 
-    def update_date(self, key, value, res=None):
-        """ 更新数据 """
+    def replace_date(self, key, value, res=None):
+        """ 替换数据 """
+        if isinstance(res, str) or isinstance(res, int):
+            return res
+        elif isinstance(res, list):
+            for one in res:
+                self.replace_date(key, value, one)
+        elif isinstance(res, dict):
+            for k, v in res.items():
+                if k == key:
+                    res[key] = value
+                    break
+                self.replace_date(key, value, v)
         return res
 
     @staticmethod

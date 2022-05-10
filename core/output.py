@@ -1,6 +1,5 @@
 # -*-* coding:UTF-8
 import json
-import csv
 
 
 def export_json(path, data):

