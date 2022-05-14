@@ -9,7 +9,7 @@ aiodns==3.0.0
 asn1crypto==1.4.0
 beautifulsoup4==4.10.0
 dnspython==2.1.0
-lxml==4.6.3
+lxml==4.6.5
 python-whois==0.7.3
 cel-python~=0.1.5
 pycryptodomex~=3.12.0
