@@ -25,7 +25,8 @@ def merge_same_data(data, result):
                 if isinstance(value[0], str):
                     value = list(set(value))
                 for i in value:
-                    result[key].append(i)
+                    if i not in result[key]:
+                        result[key].append(i)
             elif isinstance(value, dict):
                 if key not in result.keys():
                     result[key] = {}
