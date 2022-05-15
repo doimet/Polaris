@@ -30,7 +30,8 @@ def merge_same_data(data, result):
             elif isinstance(value, dict):
                 if key not in result.keys():
                     result[key] = {}
-                result[key].update(value)
+                if value not in result[key]:
+                    result[key].update(value)
             else:
                 if key not in result.keys():
                     result[key] = value
