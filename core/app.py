@@ -228,7 +228,8 @@ class Application:
                         result.append(future.result())
                     taskset = self.make_task(result)
                     depth -= 1
-            data = keep_data_format(merge_same_data(result, {}))
+            data = merge_same_data(result, {})
+            data = keep_data_format(data)
             data = self.final_handle(data)
             return data
 
