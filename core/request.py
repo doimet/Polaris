@@ -65,12 +65,14 @@ class Request:
             verify=False,
             headers=self.headers,
             proxies=self.proxies,
+            follow_redirects=True,
             cache=httpx_cache.FileCache(cache_dir='cache')
         )
         self.async_client = httpx_cache.AsyncClient(
             verify=False,
             headers=self.headers,
             proxies=self.proxies,
+            follow_redirects=True,
             cache=httpx_cache.FileCache(cache_dir='cache')
         )
 
