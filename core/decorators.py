@@ -1,4 +1,5 @@
 # -*-* coding:UTF-8
+import itertools
 
 
 class Cli:
@@ -143,13 +144,12 @@ def login_method(func):
                     return {'username': username, 'password': password}
                 self.log.debug(f'login => username: {username}, password: {password} failure')
         elif method == 2 and all([isinstance(username_list, list), isinstance(password_list, list)]):
-            for username in (username_list or ['admin']):
-                for password in (password_list or ['admin']):
-                    res = func(self, username, password)
-                    if res:
-                        self.log.debug(f'login => username: {username}, password: {password} success')
-                        return {'username': username, 'password': password}
-                    self.log.debug(f'login => username: {username}, password: {password} failure')
+            for username, password in itertools.product(username_list or ['admin'], password_list or ['admin']):
+                res = func(self, username, password)
+                if res:
+                    self.log.debug(f'login => username: {username}, password: {password} success')
+                    return {'username': username, 'password': password}
+                self.log.debug(f'login => username: {username}, password: {password} failure')
         else:
             raise Exception('login method error!')
 

@@ -42,10 +42,10 @@ def build_random_upper_str(length=8):
 randomUppercase = build_random_upper_str
 
 
-def build_random_int(min_length=8, max_length=16):
+def build_random_int(min_int=1, max_int=9999):
     """ 生成随机整数 """
 
-    return random.randint(int(min_length), int(max_length))
+    return random.randint(int(min_int), int(max_int))
 
 
 randomInt = build_random_int

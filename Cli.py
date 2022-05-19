@@ -1,10 +1,12 @@
 ﻿# -*-* coding:UTF-8
+import contextlib
 import gc
 import os
 import re
 import sys
 import time
 import toml
+import httpx
 import click
 import inspect
 import warnings
@@ -31,16 +33,33 @@ def cost_time(func):
     return wrapper
 
 
+def check_version():
+    latest_version = '0.0.0'
+    with contextlib.suppress(Exception):
+        r = httpx.get('https://raw.githubusercontent.com/doimet/Polaris/master/conf/setting.toml')
+        if r.status_code == 200:
+            match = re.search(r'version = "(\d+\.\d+\.\d+)"', r.text)
+            latest_version = match.group(1)
+    return latest_version
+
+
 def show_banner(func):
     """ 打印banner """
 
     def wrapper(options, processors):
+        current_version = config["about"]["version"]
+        latest_version = check_version()
+        notice = (
+            f"=# Notice:\033[0;32m latest version is {latest_version}\033[0m\n"
+            if (int(latest_version.replace('.', '')) > int(current_version.replace('.', '')))
+            else ""
+        )
         print(f"""
-    \033[0;31mPolaris - 渗透测试框架 {config["general"]["version"]}\033[0m
+    \033[0;31mPolaris - 渗透测试框架 {current_version}\033[0m
 
  =# Author: 浮鱼
  =# Github: https://github.com/doimet/Polaris
- 
+ {notice}
  Output File: {options['output']}
                 """)
         return func(options, processors)
@@ -75,7 +94,7 @@ def parse_input_param(ctx, param, value):
             if key in ['file', 'image']:
                 value_list = [value]
             else:
-                with open(value, encoding='utf-8') as f:
+                with open(value, encoding='utf-16') as f:
                     value_list = filter(lambda x: x != '', list(set(map(lambda x: x.strip(), f.readlines()))))
         else:
             value_list = [value]
