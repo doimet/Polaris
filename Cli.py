@@ -75,7 +75,7 @@ def parse_input_param(ctx, param, value):
             if key in ['file', 'image']:
                 value_list = [value]
             else:
-                with open(value, encoding='utf-8') as f:
+                with open(value, encoding='utf-16') as f:
                     value_list = filter(lambda x: x != '', list(set(map(lambda x: x.strip(), f.readlines()))))
         else:
             value_list = [value]

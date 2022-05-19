@@ -36,13 +36,13 @@ class Application:
     def setup(self):
         """ 判断dataset中是否有数据 有数据表示不是第一次运行 需要从dataset中提取数据当输入 """
         if self.dataset:
-            task_list = self.make_task(self.dataset)
+            task_list = self.create_task(self.dataset)
             self.dataset = []
         elif 'input' in self.options.keys():
             task_list = self.options.pop('input')
         else:
             return
-
+        self.job_total = len(task_list)
         for task in task_list:
             self.log.root(f"Target: {task[1]}")
             threading.Thread(target=self.on_monitor, daemon=True).start()
@@ -53,6 +53,7 @@ class Application:
                     self.dataset.append({'root': task[1], 'content': {self.options['command']: content}})
             else:
                 self.log.error(message)
+            self.job_count += 1
 
     def shows(self, att=None):
         """ 获取插件列表 """
@@ -120,7 +121,6 @@ class Application:
 
     def job_execute(self, target_tuple: tuple):
         """ 任务执行器 """
-
         depth = self.config['general']['depth']
         max_workers = self.config['general']['threads']
         task_list, result, cache, taskset = [], [], set(), [target_tuple]
@@ -201,8 +201,7 @@ class Application:
                     # 调用方法并执行
                     callback = functools.partial(self.log.warn, f"unknown usage: {keyword}")
                     res = getattr(obj, command.replace('-', '_'), callback)()
-                    if res:
-                        self.log.echo(res)
+                    self.log.echo(res)
             # 暂停消息线程
             self.event.clear()
             # 恢复日志模式
@@ -221,12 +220,11 @@ class Application:
                             future = executor.submit(self.job_func, plugin_name, target_tuple, plugin_object)
                             future.add_done_callback(self.on_finish)
                             task_list.append(future)
-
                         cache.add(target_tuple)
                     wait(task_list, return_when=ALL_COMPLETED)
                     for future in as_completed(task_list):
                         result.append(future.result())
-                    taskset = self.make_task(result)
+                    taskset = self.create_task(result)
                     depth -= 1
             data = merge_same_data(result, {})
             data = keep_data_format(data)
@@ -234,57 +232,54 @@ class Application:
             return data
 
     def final_handle(self, data):
-        """ 提取网段 ip """
-        ip_list = []
-        res = self.extract_data('ip', data, [])
-        for ip in (res or []):
-            ip_list.append(ip)
+        # """ 提取网段 ip """
+        # ip_list = []
+        # res = self.extract_data('ip', data, [])
+        # for ip in (res or []):
+        #     ip_list.append(ip)
         # if ip_list:
         #     segment_list = merge_ip_segment(ip_list)
         #     if segment_list:
         #         data.append({'网段信息': segment_list})
         #     pass
-        """ 子域名处理 """
-
+        # 子域名处理
         res = self.extract_data('SubdomainList', data, [])
         if res:
             self.next_job = 'subdomain analysis'
             with ThreadPoolExecutor(max_workers=100) as executor:
-                value = executor.map(self.resolve_task, sum(res, []))
-                value = [_ for _ in value if _]
+                def run_task(one):
+                    with contextlib.suppress(Exception):
+                        _subdomain = one["subdomain"]
+                        if _subdomain in self.records:
+                            ips = self.records[_subdomain]
+                        else:
+                            obj = dns.resolver.Resolver()
+                            ips = obj.resolve(_subdomain)
+                            ips = [i.to_text() for i in ips]
+                            self.records[_subdomain] = ips
+                        cdn = True if len(ips) > 1 else False
+                        _ip = ips[0] if len(ips) == 1 else ""
+                        if one.get('ip') == _ip:
+                            one.update({'ip': _ip, 'record': one.get('record'), 'cdn': cdn})
+                        else:
+                            if one.get('record') and one.get('ip'):
+                                record = [one['record'] + one['ip']]
+                            else:
+                                record = (one.get('record', '') + one.get('ip', '')).strip()
+                            one.update({'ip': _ip, 'record': record, 'cdn': cdn})
+                        return one
+                value = [_ for _ in executor.map(run_task, sum(res, [])) if _]
                 data = self.replace_date('SubdomainList', value, data)
         return data
 
-    def resolve_task(self, one):
-        with contextlib.suppress(Exception):
-            subdomain = one["subdomain"]
-            if subdomain in self.records:
-                ips = self.records[subdomain]
-            else:
-                obj = dns.resolver.Resolver()
-                ips = obj.resolve(subdomain)
-                ips = [i.to_text() for i in ips]
-                self.records[subdomain] = ips
-            cdn = True if len(ips) > 1 else False
-            ip = ips[0] if len(ips) == 1 else ""
-            if one.get('ip') == ip:
-                one.update({'ip': ip, 'record': one.get('record'), 'cdn': cdn})
-            else:
-                if one.get('record') and one.get('ip'):
-                    record = [one['record']+one['ip']]
-                else:
-                    record = (one.get('record', '') + one.get('ip', '')).strip()
-                one.update({'ip': ip, 'record': record, 'cdn': cdn})
-            return one
-
-    def make_task(self, data):
-        """ 生成任务 """
-        target_list = []
+    def create_task(self, data):
+        """ 创建任务 """
+        task_list = []
         for subdomain in self.extract_data('subdomain', data, []):
-            target_list.append(('url', 'http://{}'.format(subdomain)))
+            task_list.append(('url', 'http://{}'.format(subdomain)))
         for url in self.extract_data('url', data, []):
-            target_list.append(('url', url))
-        return target_list
+            task_list.append(('url', url))
+        return task_list
 
     def extract_data(self, key, data, res=None):
         """ 提取数据 """
@@ -320,9 +315,9 @@ class Application:
     def check_target(key, value):
         """
         检测目标指标:
-        1.检测目标是否存活
+        1.ip检测目标存活、检测cdn
+        2.url检测蜜罐
         """
-        return True, ''
         if key == 'url':
             try:
                 request = Request({}, {})
@@ -432,7 +427,8 @@ class Application:
         """ 获取目录下所有文件 """
         for root, dir_name, filenames in os.walk(path):
             for filename in filenames:
-                yield root, filename
+                if not filename.startswith('__') and any([filename.endswith(ext) for ext in ['.py', '.yml']]):
+                    yield root, filename
 
     def get_plugin_list(self, path: str, names: tuple, att=None):
         """ 获取插件列表 """
@@ -441,30 +437,29 @@ class Application:
         res = set()
         for file_path, filename in self.list_path_file(path):
             file_stem, file_ext = Path(filename).stem, Path(filename).suffix
-            if file_ext in ['.py', '.yml'] and not filename.startswith('_'):
-                plugin_obj = self.get_plugin_object(os.path.join(file_path, filename))
-                if att and att not in dir(plugin_obj):
-                    continue
-                elif names:
-                    for plugin in names:
-                        if plugin[0] == '!' and file_stem in [plugin[1:] for plugin in names]:
+            plugin_obj = self.get_plugin_object(os.path.join(file_path, filename))
+            if att and att not in dir(plugin_obj):
+                continue
+            elif names:
+                for plugin in names:
+                    if plugin[0] == '!' and file_stem in [plugin[1:] for plugin in names]:
+                        continue
+                    elif plugin.startswith('@'):
+                        callback_func = plugin.strip('@')
+                        if callback_func not in dir(plugin_obj):
                             continue
-                        elif plugin.startswith('@'):
-                            callback_func = plugin.strip('@')
-                            if callback_func not in dir(plugin_obj):
-                                continue
-                            else:
-                                res.add((file_path, file_stem, file_ext))
-                        elif plugin.startswith('%') and plugin.strip('%').lower() in file_stem.lower():
-                            res.add((file_path, file_stem, file_ext))
-                        elif file_stem.lower() == plugin.lower() or is_exclude:
-                            res.add((file_path, file_stem, file_ext))
-                        elif plugin.lower() in file_path.lower():
-                            res.add((file_path, file_stem, file_ext))
                         else:
-                            continue
-                else:
-                    res.add((file_path, file_stem, file_ext))
+                            res.add((file_path, file_stem, file_ext))
+                    elif plugin.startswith('%') and plugin.strip('%').lower() in file_stem.lower():
+                        res.add((file_path, file_stem, file_ext))
+                    elif file_stem.lower() == plugin.lower() or is_exclude:
+                        res.add((file_path, file_stem, file_ext))
+                    elif plugin.lower() in file_path.lower():
+                        res.add((file_path, file_stem, file_ext))
+                    else:
+                        continue
+            else:
+                res.add((file_path, file_stem, file_ext))
         return res
 
     @staticmethod
@@ -501,7 +496,6 @@ class Application:
         2.更新插件信息
         """
         plugin_object = self.build_plugin_object()
-
         if file_path.endswith('.yml'):
             plugin = YamlPoc
             with open(file_path, encoding='utf8') as f:

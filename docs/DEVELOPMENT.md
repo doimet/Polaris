@@ -51,9 +51,9 @@
   ```
 + `build_random_int`/`randomInt`: 生成随机整数
   ```
-  build_random_int(length: int) -> int
-  传入生成长度
-  返回随机整数
+  build_random_int(min_int: int, max_int: int) -> int
+  传入最小整数、最大整数
+  返回最小整数到最大整数范围之间的随机数字
   ```
 + `build_random_str`/`randomStr`: 生成随机字符串
   ```
