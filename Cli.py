@@ -1,5 +1,4 @@
 ﻿# -*-* coding:UTF-8
-import contextlib
 import gc
 import os
 import re
@@ -10,6 +9,7 @@ import httpx
 import click
 import inspect
 import warnings
+import contextlib
 from IPy import IP
 from core.app import Application
 
@@ -94,7 +94,7 @@ def parse_input_param(ctx, param, value):
             if key in ['file', 'image']:
                 value_list = [value]
             else:
-                with open(value, encoding='utf-16') as f:
+                with open(value, encoding='utf-8') as f:
                     value_list = filter(lambda x: x != '', list(set(map(lambda x: x.strip(), f.readlines()))))
         else:
             value_list = [value]

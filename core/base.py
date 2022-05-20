@@ -59,14 +59,13 @@ class Logging(logging.Logger):
         self.addHandler(stream_handler)
 
     def echo(self, msg, *args, **kwargs):
-        if self.isEnabledFor(70) and msg:
-            sys.stdout.write('\r' + 100 * ' ' + '\r')
-            self._log(70, "{}".format(str(msg)), args, **kwargs)
+        sys.stdout.write('\r' + 100 * ' ' + '\r')
+        self._log(70, "{}".format(str(msg)), args, **kwargs)
 
     def debug(self, msg, *args, **kwargs):
         """ 调试输出 """
 
-        if self.isEnabledFor(10) and msg:
+        if self.isEnabledFor(10):
             msg = str(msg)
             sys.stdout.write('\r' + 100 * ' ' + '\r')
             shape = f'\r\033[0;34m[*]\033[0m' if self.is_console_mode else '\r\033[0;34m | \033[0m'
@@ -102,7 +101,7 @@ class Logging(logging.Logger):
     def warn(self, msg, *args, **kwargs):
         """ 异常输出 """
 
-        if self.isEnabledFor(30) and msg:
+        if self.isEnabledFor(30):
             sys.stdout.write('\r' + 100 * ' ' + '\r')
             if self.is_console_mode:
                 shape = '\r\033[0;33m[!]\033[0m'
@@ -116,7 +115,7 @@ class Logging(logging.Logger):
     def error(self, msg, *args, **kwargs):
         """ 错误输出 """
 
-        if self.isEnabledFor(40) and msg:
+        if self.isEnabledFor(40):
             sys.stdout.write('\r' + 100 * ' ' + '\r')
             if self.is_console_mode:
                 shape = '\r\033[0;31m[-]\033[0m'
@@ -129,7 +128,7 @@ class Logging(logging.Logger):
     def child(self, msg, *args, **kwargs):
         """ 消息输出 """
 
-        if self.isEnabledFor(50) and msg:
+        if self.isEnabledFor(50):
             msg = str(msg)
             sys.stdout.write('\r' + 100 * ' ' + '\r')
             if self.is_console_mode:
@@ -140,7 +139,7 @@ class Logging(logging.Logger):
 
     def root(self, msg, *args, **kwargs):
         """ 消息输出 """
-        if self.isEnabledFor(60) and msg:
+        if self.isEnabledFor(60):
             msg = str(msg)
             sys.stdout.write('\r' + 100 * ' ' + '\r')
             self._log(60, "\r\033[0;34m[+]\033[0m {}".format(msg + (100 - len(msg)) * ' '), args, **kwargs)
@@ -148,7 +147,7 @@ class Logging(logging.Logger):
     def critical(self, msg, *args, **kwargs):
         """ 严重输出 调用会导致程序结束 """
 
-        if self.isEnabledFor(70) and msg:
+        if self.isEnabledFor(70):
             msg = str(msg)
             sys.stdout.write('\r' + 100 * ' ' + '\r')
             self._log(70, "\r\033[0;31m[-]\033[0m {}".format(msg + (100 - len(msg)) * ' '), args, **kwargs)
@@ -268,7 +267,6 @@ class AsyncioExecute(object):
         asyncio.set_event_loop(self._new_loop)
         self.lock = asyncio.Semaphore(max_workers)
         self.loop = asyncio.get_event_loop()
-        self.threshold = None
 
     def __enter__(self):
         return self
@@ -356,13 +354,12 @@ class PluginBase(Request):
                 method.append(k)
         return method
 
-    @staticmethod
-    def __condition__():
+    def __condition__(self):
         return True
 
-    def condition(self, matches=None, logic=None):
+    def condition(self, matches=[], logic=None):
         condition = []
-        for index, match in enumerate(matches or []):
+        for index, match in enumerate(matches):
             try:
                 r = self.request(method='get', url=urllib.parse.urljoin(self.target.value, match.get('path', '.')))
                 search, dom = match.get('search', 'all'), lxml.etree.HTML(r.content)
@@ -412,14 +409,14 @@ class YamlPoc(PluginBase):
     __output__ = {}
 
     def url(self):
-        var_dict = {}
+        vars = {}
         condition = {}
         env = celpy.Environment()
 
         for k, v in self.__vars__.items():
             if 'request' in str(v):
                 v = v.repalce('request', 'target')
-            var_dict[k] = eval(f'self.{v}')
+            vars[k] = eval(f'self.{v}')
         for k, v in self.__rule__.items():
             options = {
                 "method": v['request']['method'],
@@ -428,7 +425,7 @@ class YamlPoc(PluginBase):
                 "headers": v['request'].get('headers', {}),
                 "data": v['request'].get('body', {})
             }
-            for i, j in var_dict.items():
+            for i, j in vars.items():
                 options = json.loads(json.dumps(options).replace('{{' + i + '}}', str(j)))
             response = self.request(**options)
 
@@ -497,7 +494,7 @@ class YamlPoc(PluginBase):
                     }
                 )
             }
-            kwargs.update(var_dict)
+            kwargs.update(vars)
             res = prgm.evaluate(kwargs)
             condition[k] = str(res)
         for k, v in condition.items():

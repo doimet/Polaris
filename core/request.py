@@ -1,8 +1,8 @@
 # -*-* coding:UTF-8
-import httpx
 import random
+import _socket
 import hashlib
-import contextlib
+import httpx
 import httpx_cache
 from urllib.parse import urljoin
 
@@ -18,28 +18,63 @@ class RewriteString(str):
             return False
 
 
+class DNSProxy:
+    _rules, _host, old = [], None, _socket.getaddrinfo
+
+    def __init__(self, rules, host):
+        self.is_patch = False
+        self.monkey_patch()
+        self.rules = rules
+        self.host = host
+
+    def get_address_info(self):
+        def wrapper(host, *args, **kwargs):
+            if host in self.rules:
+                host = self.host
+            return self.old(host, *args, **kwargs)
+
+        return wrapper
+
+    def monkey_patch(self):
+        if self.is_patch:
+            return
+        self.is_patch = True
+        _socket.getaddrinfo = self.get_address_info()
+
+    def remove_monkey_patch(self):
+        if not self.is_patch:
+            return
+        self.is_patch = False
+        _socket.getaddrinfo = self.old
+
+
 class Request:
     """ 网络封装 """
 
     def __init__(self, target=None, config=None):
-        self.target, self.config, self.headers, self.proxies = target, config, None, None
-        with contextlib.suppress(Exception):
-            self.headers = {
-                k: (RandomUserAgent.get() if k == 'User-Agent' and not v else v)
-                for k, v in config['network']['headers'].items()
-            }
+        self.target = target
+        self.config = config
+        if config:
+            self.headers = config['network']['headers']
+            if not self.headers.get('User-Agent', None):
+                self.headers['User-Agent'] = RandomUserAgent.get()
             self.proxies = {f'{k}://': v for k, v in config['network']['proxies'].items() if v}
-        kwargs = {
-            "verify": False,
-            "headers": self.headers,
-            "proxies": self.proxies,
-            "follow_redirects": True,
-            "cache": httpx_cache.FileCache(cache_dir='cache'),
-            "cacheable_methods": ('GET', 'POST'),
-            "cacheable_status_codes": (200, 404)
-        }
-        self.client = httpx_cache.Client(**kwargs)
-        self.async_client = httpx_cache.AsyncClient(**kwargs)
+        else:
+            self.headers, self.proxies = None, None
+        self.client = httpx_cache.Client(
+            verify=False,
+            headers=self.headers,
+            proxies=self.proxies,
+            follow_redirects=True,
+            cache=httpx_cache.FileCache(cache_dir='cache')
+        )
+        self.async_client = httpx_cache.AsyncClient(
+            verify=False,
+            headers=self.headers,
+            proxies=self.proxies,
+            follow_redirects=True,
+            cache=httpx_cache.FileCache(cache_dir='cache')
+        )
 
     def request(self, method='get', url=None, path=None, *args, **kwargs):
         if not url and path and self.target:
@@ -47,20 +82,29 @@ class Request:
         try:
             response = self.client.request(method=method, url=url, *args, **kwargs)
         except httpx.ConnectError as connect_error:
-            url = url.replace('https://', 'http://') if 'https://' in url else url.replace('http://', 'https://')
-            response = self.client.request(method=method, url=url, *args, **kwargs)
+            response = self.client.request(
+                method=method,
+                url=url.replace('http://', 'https://'),
+                *args,
+                **kwargs
+            )
         except Exception as e:
             raise Exception(e)
         return self.decorate_response(response)
 
     async def async_http(self, method='get', url=None, path=None, *args, **kwargs):
+
         if not url and path and self.target:
             url = urljoin(self.target.value, path)
         try:
             response = await self.async_client.request(method=method, url=url, *args, **kwargs)
         except httpx.ConnectError as connect_error:
-            url = url.replace('https://', 'http://') if 'https://' in url else url.replace('http://', 'https://')
-            response = await self.async_client.request(method=method, url=url, *args, **kwargs)
+            response = await self.async_client.request(
+                method=method,
+                url=url.replace('http://', 'https://'),
+                *args,
+                **kwargs
+            )
         except Exception as e:
             raise Exception(e)
         return self.decorate_response(response)
@@ -68,6 +112,7 @@ class Request:
     @staticmethod
     def unit_convert(num):
         """ 单位换算 """
+
         base = 1024
         for x in ["B ", "KB", "MB", "GB"]:
             if base > num > -base:
