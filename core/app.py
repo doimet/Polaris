@@ -1,4 +1,5 @@
 # -*-* coding:UTF-8
+import ipaddress
 import os
 import sys
 import time
@@ -14,6 +15,8 @@ from urllib.parse import urlparse
 from core.base import PluginBase, PluginObject, Logging, YamlPoc
 from core.common import merge_same_data, keep_data_format, get_table_form, merge_ip_segment
 from concurrent.futures import ThreadPoolExecutor, as_completed, wait, ALL_COMPLETED
+
+from core.static import CdnList
 
 
 class Application:
@@ -32,6 +35,7 @@ class Application:
         self.event = threading.Event()
         self.event.set()
         self.records = {}
+        self.is_first_run = True
 
     def setup(self):
         """ 判断dataset中是否有数据 有数据表示不是第一次运行 需要从dataset中提取数据当输入 """
@@ -44,7 +48,9 @@ class Application:
         self.job_total = len(task_list)
         for task in task_list:
             self.log.root(f"Target: {task[1]}")
-            threading.Thread(target=self.on_monitor, daemon=True).start()
+            if self.is_first_run:
+                threading.Thread(target=self.on_monitor, daemon=True).start()
+                self.is_first_run = False
             status, message = self.check_target(*task)
             if status:
                 content = self.job_execute(task)
@@ -262,13 +268,19 @@ class Application:
                             ips = obj.resolve(_subdomain)
                             ips = [i.to_text() for i in ips]
                             self.records[_subdomain] = ips
-                        cdn = True if len(ips) > 1 else False
                         _ip = ips[0] if len(ips) == 1 else ""
+                        if (
+                                any([ipaddress.ip_address(_ip) in ipaddress.ip_network(cdn) for cdn in CdnList]) or
+                                len(ips) > 1
+                        ):
+                            cdn = True
+                        else:
+                            cdn = False
                         if one.get('ip') == _ip:
-                            one.update({'ip': _ip, 'record': one.get('record'), 'cdn': cdn})
+                            one.update({'cdn': cdn})
                         else:
                             if one.get('record') and one.get('ip'):
-                                record = [one['record'] + one['ip']]
+                                record = [one['record'], one['ip']]
                             else:
                                 record = (one.get('record', '') + one.get('ip', '')).strip()
                             one.update({'ip': _ip, 'record': record, 'cdn': cdn})
@@ -281,7 +293,7 @@ class Application:
         """ 创建任务 """
         task_list = []
         for subdomain in self.extract_data('subdomain', data, []):
-            task_list.append(('url', 'http://{}'.format(subdomain)))
+            task_list.append(('subdomain', subdomain))
         for url in self.extract_data('url', data, []):
             task_list.append(('url', url))
         return task_list

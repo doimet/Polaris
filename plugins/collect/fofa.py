@@ -14,12 +14,12 @@ class Plugin(Base):
             method='get',
             url='http://fofa.info/api/v1/search/all',
             params={
-                'email': self.plugin.auth.email,
-                'key': self.plugin.auth.key,
+                'email': self.config.fofa.auth.email,
+                'key': self.config.fofa.auth.key,
                 'page': 1,
                 'qbase64': base64.b64encode(f'domain="{self.target.value}"'.encode()).decode(),
                 'full': 'false',
-                'fields': "ip,domain",
+                'fields': "ip,host",
                 'size': 10000,
             }
         )
@@ -29,8 +29,8 @@ class Plugin(Base):
                 return {
                     'SubdomainList': [
                         {
-                            'subdomain': _[1],
+                            'subdomain': _[1].replace('https://', '').replace('http://', ''),
                             'ip': _[0],
-                        } for _ in resp['results']
+                        } for _ in resp['results'] if self.target.value in _[1]
                     ]
                 }
