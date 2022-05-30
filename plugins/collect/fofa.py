@@ -14,8 +14,8 @@ class Plugin(Base):
             method='get',
             url='http://fofa.info/api/v1/search/all',
             params={
-                'email': self.plugin.auth.email,
-                'key': self.plugin.auth.key,
+                'email': self.config.fofa.auth.email,
+                'key': self.config.fofa.auth.key,
                 'page': 1,
                 'qbase64': base64.b64encode(f'domain="{self.target.value}"'.encode()).decode(),
                 'full': 'false',

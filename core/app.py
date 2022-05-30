@@ -32,6 +32,7 @@ class Application:
         self.event = threading.Event()
         self.event.set()
         self.records = {}
+        self.is_first_run = True
 
     def setup(self):
         """ 判断dataset中是否有数据 有数据表示不是第一次运行 需要从dataset中提取数据当输入 """
@@ -44,7 +45,9 @@ class Application:
         self.job_total = len(task_list)
         for task in task_list:
             self.log.root(f"Target: {task[1]}")
-            threading.Thread(target=self.on_monitor, daemon=True).start()
+            if self.is_first_run:
+                threading.Thread(target=self.on_monitor, daemon=True).start()
+                self.is_first_run = False
             status, message = self.check_target(*task)
             if status:
                 content = self.job_execute(task)
@@ -281,7 +284,7 @@ class Application:
         """ 创建任务 """
         task_list = []
         for subdomain in self.extract_data('subdomain', data, []):
-            task_list.append(('url', 'http://{}'.format(subdomain)))
+            task_list.append(('subdomain', subdomain))
         for url in self.extract_data('url', data, []):
             task_list.append(('url', url))
         return task_list
