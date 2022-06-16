@@ -6,7 +6,7 @@ Translator = {
   "ICPInfo": "备案信息",
   "IPInfo": "IP信息",
   "APPInfo": "应用信息",
-  "WebSiteInfo": "网站信息",
+  "WebInfo": "网站信息",
   "InvestInfo": "对外投资",
   "BranchInfo": "分支机构",
   "HoldsInfo": "控股企业",

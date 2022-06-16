@@ -1,5 +1,5 @@
 [about]
-version = "1.5.0"
+version = "1.5.1"
 
 # ----------------------------------------------------------------------------------------------------------------------
 # System Config
@@ -17,8 +17,8 @@ asyncio = 50
 [network]
     [network.headers]
         "User-Agent" = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36 Edg/100.0.1185.44"
-        "Content-Type" = "application/x-www-form-urlencoded"
         "Referer" = "https://www.google.com"
+        "cookie" = "rememberMe=x"
     [network.proxies]
         http = ""
         https = ""

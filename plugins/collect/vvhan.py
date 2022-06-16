@@ -22,7 +22,7 @@ class Plugin(Base):
                     "icp": info["icp"],
                     "nature": info["nature"],
                 },
-                "WebSiteInfo": {
+                "WebInfo": {
                     "title": info["title"]
                 }
             }

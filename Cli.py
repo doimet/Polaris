@@ -36,7 +36,7 @@ def cost_time(func):
 def check_version():
     latest_version = '0.0.0'
     with contextlib.suppress(Exception):
-        r = httpx.get('https://raw.githubusercontent.com/doimet/Polaris/master/conf/setting.toml')
+        r = httpx.get('https://raw.githubusercontent.com/doimet/Polaris/master/conf/setting.toml', timeout=5)
         if r.status_code == 200:
             match = re.search(r'version = "(\d+\.\d+\.\d+)"', r.text)
             latest_version = match.group(1)

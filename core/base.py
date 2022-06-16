@@ -59,13 +59,14 @@ class Logging(logging.Logger):
         self.addHandler(stream_handler)
 
     def echo(self, msg, *args, **kwargs):
-        sys.stdout.write('\r' + 100 * ' ' + '\r')
-        self._log(70, "{}".format(str(msg)), args, **kwargs)
+        if msg is not None:
+            sys.stdout.write('\r' + 100 * ' ' + '\r')
+            self._log(70, "{}".format(str(msg)), args, **kwargs)
 
     def debug(self, msg, *args, **kwargs):
         """ 调试输出 """
 
-        if self.isEnabledFor(10):
+        if self.isEnabledFor(10) and msg is not None:
             msg = str(msg)
             sys.stdout.write('\r' + 100 * ' ' + '\r')
             shape = f'\r\033[0;34m[*]\033[0m' if self.is_console_mode else '\r\033[0;34m | \033[0m'
@@ -74,7 +75,7 @@ class Logging(logging.Logger):
     def info(self, msg, *args, **kwargs):
         """ 消息输出 """
 
-        if self.isEnabledFor(20):
+        if self.isEnabledFor(20) and msg is not None:
             msg = str(msg)
             sys.stdout.write('\r' + 100 * ' ' + '\r')
             shape = '\r\033[0;34m[i]\033[0m' if self.is_console_mode else '\r\033[0;34m | \033[0m'
@@ -83,7 +84,7 @@ class Logging(logging.Logger):
     def success(self, msg, *args, **kwargs):
         """ 成功输出 """
 
-        if self.isEnabledFor(25):
+        if self.isEnabledFor(25) and msg is not None:
             msg = str(msg)
             sys.stdout.write('\r' + 100 * ' ' + '\r')
             shape = '\r\033[0;32m[+]\033[0m' if self.is_console_mode else '\r\033[0;34m | \033[0m'
@@ -92,7 +93,7 @@ class Logging(logging.Logger):
     def failure(self, msg, *args, **kwargs):
         """ 失败输出 """
 
-        if self.isEnabledFor(25):
+        if self.isEnabledFor(25) and msg is not None:
             msg = str(msg)
             sys.stdout.write('\r' + 100 * ' ' + '\r')
             shape = '\r\033[0;31m[-]\033[0m' if self.is_console_mode else '\r\033[0;34m | \033[0m'
@@ -101,7 +102,7 @@ class Logging(logging.Logger):
     def warn(self, msg, *args, **kwargs):
         """ 异常输出 """
 
-        if self.isEnabledFor(30):
+        if self.isEnabledFor(30) and msg is not None:
             sys.stdout.write('\r' + 100 * ' ' + '\r')
             if self.is_console_mode:
                 shape = '\r\033[0;33m[!]\033[0m'
@@ -115,7 +116,7 @@ class Logging(logging.Logger):
     def error(self, msg, *args, **kwargs):
         """ 错误输出 """
 
-        if self.isEnabledFor(40):
+        if self.isEnabledFor(40) and msg is not None:
             sys.stdout.write('\r' + 100 * ' ' + '\r')
             if self.is_console_mode:
                 shape = '\r\033[0;31m[-]\033[0m'
@@ -128,7 +129,7 @@ class Logging(logging.Logger):
     def child(self, msg, *args, **kwargs):
         """ 消息输出 """
 
-        if self.isEnabledFor(50):
+        if self.isEnabledFor(50) and msg is not None:
             msg = str(msg)
             sys.stdout.write('\r' + 100 * ' ' + '\r')
             if self.is_console_mode:
@@ -139,7 +140,7 @@ class Logging(logging.Logger):
 
     def root(self, msg, *args, **kwargs):
         """ 消息输出 """
-        if self.isEnabledFor(60):
+        if self.isEnabledFor(60) and msg is not None:
             msg = str(msg)
             sys.stdout.write('\r' + 100 * ' ' + '\r')
             self._log(60, "\r\033[0;34m[+]\033[0m {}".format(msg + (100 - len(msg)) * ' '), args, **kwargs)

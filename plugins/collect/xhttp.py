@@ -14,10 +14,10 @@ class Plugin(Base):
         match = re.search('<title>(.*?)</title>', r.text, re.IGNORECASE)
         title = match.group(1).strip() if match else '-'
         return {
-            'WebSiteInfo': {
-                'url': self.target.value,
-                'title': title,
-                'size': r.length,
-                'code': r.status_code,
+            "WebInfo": {
+                "url": self.target.value,
+                "title": title,
+                "size": r.length,
+                "code": r.status_code,
             }
         }

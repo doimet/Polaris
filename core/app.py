@@ -1,9 +1,10 @@
 # -*-* coding:UTF-8
-import ipaddress
 import os
 import sys
 import time
 import yaml
+import platform
+import ipaddress
 import threading
 import importlib
 import functools
@@ -85,11 +86,20 @@ class Application:
             status = '\033[0;31mDisable\033[0m' if (
                     file_name in self.config.keys() and self.config[file_name].get('enable', False)
             ) else '\033[0;92mEnable\033[0m'
+            if platform.system() == 'Windows':
+                sp = file_path.split('\\')
+            else:
+                sp = file_path.split('/')
+            if len(sp) > 2:
+                app_name = sp[2]
+            else:
+                app_name = '-'
             show_list.append(
                 [
                     {
                         '插件': file_name,
                         '名称': plugin_info['name'],
+                        '应用': app_name,
                         '描述': plugin_info['description'],
                         '支持': ','.join(inner_method),
                         '状态': status
@@ -97,6 +107,7 @@ class Application:
                     {
                         '插件': file_name,
                         '名称': plugin_info['name'],
+                        '应用': app_name,
                         '描述': plugin_info['description'],
                         '支持': ','.join(inner_method),
                         '来源': ', '.join(plugin_info['references']) if isinstance(plugin_info['references'], list) else
@@ -270,7 +281,8 @@ class Application:
                             self.records[_subdomain] = ips
                         _ip = ips[0] if len(ips) == 1 else ""
                         if (
-                                any([ipaddress.ip_address(_ip) in ipaddress.ip_network(cdn) for cdn in CdnList]) or
+                                any([ipaddress.ip_address(_ip) in ipaddress.ip_network(cdn) for cdn in
+                                     CdnList] if _ip else []) or
                                 len(ips) > 1
                         ):
                             cdn = True
@@ -280,13 +292,15 @@ class Application:
                             one.update({'cdn': cdn})
                         else:
                             if one.get('record') and one.get('ip'):
-                                record = [one['record'], one['ip']]
+                                record = [one['record'], one.get('ip')]
                             else:
                                 record = (one.get('record', '') + one.get('ip', '')).strip()
                             one.update({'ip': _ip, 'record': record, 'cdn': cdn})
                         return one
+
                 value = [_ for _ in executor.map(run_task, sum(res, [])) if _]
                 data = self.replace_date('SubdomainList', value, data)
+                self.msg_handle(name="域名分析", data=data)
         return data
 
     def create_task(self, data):
