@@ -32,10 +32,11 @@ class Logging(logging.Logger):
     """ 日志基类 """
 
     def __init__(self, level=logging.INFO, mode=0):
-        super(Logging, self).__init__(name='error', level=level or 20)
+        super(Logging, self).__init__(name='error', level=level or 100)
         # self.__setFileHandler__()
         self.__setStreamHandler__()
         self.is_console_mode = mode  # 1表示交互模式, 0非交互模式
+        self.records = []
 
     def set_level(self, level):
         self.setLevel(level)
@@ -58,118 +59,109 @@ class Logging(logging.Logger):
         stream_handler.setLevel(level)
         self.addHandler(stream_handler)
 
+    def make_record(self, record):
+        self.records.append(record)
+        sys.stdout.write('\r' + 100 * ' ' + '\r')
+        return record
+
     def echo(self, msg, *args, **kwargs):
         if msg is not None:
-            sys.stdout.write('\r' + 100 * ' ' + '\r')
             self._log(70, "{}".format(str(msg)), args, **kwargs)
 
     def debug(self, msg, *args, **kwargs):
         """ 调试输出 """
 
         if self.isEnabledFor(10) and msg is not None:
-            msg = str(msg)
-            sys.stdout.write('\r' + 100 * ' ' + '\r')
             shape = f'\r\033[0;34m[*]\033[0m' if self.is_console_mode else '\r\033[0;34m | \033[0m'
-            self._log(10, "{} {}".format(shape, msg + (100 - len(msg)) * ' '), args, **kwargs)
+            self._log(10, self.make_record("{} {}".format(shape, str(msg) + (100 - len(str(msg))) * ' ')), args,
+                      **kwargs)
 
     def info(self, msg, *args, **kwargs):
         """ 消息输出 """
 
         if self.isEnabledFor(20) and msg is not None:
-            msg = str(msg)
-            sys.stdout.write('\r' + 100 * ' ' + '\r')
             shape = '\r\033[0;34m[i]\033[0m' if self.is_console_mode else '\r\033[0;34m | \033[0m'
-            self._log(20, "{} {}".format(shape, msg + (100 - len(msg)) * ' '), args, **kwargs)
+            self._log(20, self.make_record("{} {}".format(shape, str(msg) + (100 - len(str(msg))) * ' ')), args,
+                      **kwargs)
 
     def success(self, msg, *args, **kwargs):
         """ 成功输出 """
 
         if self.isEnabledFor(25) and msg is not None:
-            msg = str(msg)
-            sys.stdout.write('\r' + 100 * ' ' + '\r')
             shape = '\r\033[0;32m[+]\033[0m' if self.is_console_mode else '\r\033[0;34m | \033[0m'
-            self._log(25, "{} {}".format(shape, msg + (100 - len(msg)) * ' '), args, **kwargs)
+            self._log(25, self.make_record("{} {}".format(shape, str(msg) + (100 - len(str(msg))) * ' ')), args,
+                      **kwargs)
 
     def failure(self, msg, *args, **kwargs):
         """ 失败输出 """
 
         if self.isEnabledFor(25) and msg is not None:
-            msg = str(msg)
-            sys.stdout.write('\r' + 100 * ' ' + '\r')
             shape = '\r\033[0;31m[-]\033[0m' if self.is_console_mode else '\r\033[0;34m | \033[0m'
-            self._log(25, "{} {}".format(shape, msg + (100 - len(msg)) * ' '), args, **kwargs)
+            self._log(25, self.make_record("{} {}".format(shape, str(msg) + (100 - len(str(msg))) * ' ')), args,
+                      **kwargs)
 
     def warn(self, msg, *args, **kwargs):
         """ 异常输出 """
 
         if self.isEnabledFor(30) and msg is not None:
-            sys.stdout.write('\r' + 100 * ' ' + '\r')
-            if self.is_console_mode:
-                shape = '\r\033[0;33m[!]\033[0m'
-                msg = str(msg)
-            else:
-                shape = '\r\033[0;34m | \033[0m'
+            if not self.is_console_mode:
                 msg = f'\033[0;33m{msg}\033[0m'
+            shape = '\r\033[0;33m[!]\033[0m' if self.is_console_mode else '\r\033[0;34m | \033[0m'
             # args置空 防止交互异常 日志打印报错信息
-            self._log(30, "{} {}".format(shape, msg + (100 - len(msg)) * ' '), (), **kwargs)
+            self._log(30, self.make_record("{} {}".format(shape, str(msg) + (100 - len(str(msg))) * ' ')), (), **kwargs)
 
     def error(self, msg, *args, **kwargs):
         """ 错误输出 """
 
         if self.isEnabledFor(40) and msg is not None:
-            sys.stdout.write('\r' + 100 * ' ' + '\r')
-            if self.is_console_mode:
-                shape = '\r\033[0;31m[-]\033[0m'
-                msg = str(msg)
-            else:
-                shape = '\r\033[0;34m | \033[0m'
+            if not self.is_console_mode:
                 msg = f'\033[0;31m{msg}\033[0m'
-            self._log(40, "{} {}".format(shape, msg + (100 - len(msg)) * ' '), args, **kwargs)
+            shape = '\r\033[0;31m[-]\033[0m' if self.is_console_mode else '\r\033[0;31m | \033[0m'
+            self._log(40, self.make_record("{} {}".format(shape, str(msg) + (100 - len(str(msg))) * ' ')), args,
+                      **kwargs)
 
     def child(self, msg, *args, **kwargs):
         """ 消息输出 """
 
         if self.isEnabledFor(50) and msg is not None:
-            msg = str(msg)
-            sys.stdout.write('\r' + 100 * ' ' + '\r')
             if self.is_console_mode:
-                self._log(50, "{}".format(msg + (100 - len(msg)) * ' '), (), **kwargs)
+                self._log(50, "{}".format(str(msg) + (100 - len(str(msg))) * ' '), (), **kwargs)
             else:
-                msg = msg.replace('\n', '\n\033[0;34m | \033[0m ')
-                self._log(50, "\r\033[0;34m | \033[0m {}".format(msg + (100 - len(msg)) * ' '), (), **kwargs)
+                msg = str(msg).replace('\n', '\n\033[0;34m | \033[0m ')
+                self._log(50,
+                          self.make_record("\r\033[0;34m | \033[0m {}".format(str(msg) + (100 - len(str(msg))) * ' ')),
+                          (), **kwargs)
 
     def root(self, msg, *args, **kwargs):
         """ 消息输出 """
         if self.isEnabledFor(60) and msg is not None:
-            msg = str(msg)
-            sys.stdout.write('\r' + 100 * ' ' + '\r')
-            self._log(60, "\r\033[0;34m[+]\033[0m {}".format(msg + (100 - len(msg)) * ' '), args, **kwargs)
+            self._log(60, self.make_record("\r\033[0;34m[+]\033[0m {}".format(str(msg) + (100 - len(str(msg))) * ' ')),
+                      args, **kwargs)
 
     def critical(self, msg, *args, **kwargs):
         """ 严重输出 调用会导致程序结束 """
 
         if self.isEnabledFor(70):
-            msg = str(msg)
-            sys.stdout.write('\r' + 100 * ' ' + '\r')
-            self._log(70, "\r\033[0;31m[-]\033[0m {}".format(msg + (100 - len(msg)) * ' '), args, **kwargs)
+            self._log(70, self.make_record("\r\033[0;31m[-]\033[0m {}".format(str(msg) + (100 - len(str(msg))) * ' ')),
+                      args, **kwargs)
             sys.exit(1)
 
 
-class EchoQueryExecute:
+class EchoQueryExecute(Request):
     def __init__(self):
+        Request.__init__(self)
         rsa = RSA.generate(2048)
-        random_str = str(uuid.uuid4())
+        random_str = str(uuid.uuid4()).replace('-', '')
         self.public_key = rsa.publickey().exportKey()
         self.private_key = rsa.exportKey()
         self.secret = random_str
         self.correlation_id = random_str[:20]
-        self.session = Request({}, {})
         self.result_list = []
         self.create()
 
     def create(self):
-        self.session.request(
-            method="post",
+        r = self.request(
+            method="POST",
             url="https://interact.sh/register",
             json={
                 "public-key": b64encode(self.public_key).decode("utf-8"),
@@ -178,6 +170,8 @@ class EchoQueryExecute:
             },
             headers={"Content-Type": "application/json"}
         )
+        if 'registration successful' not in r.text:
+            raise Exception('interact register failure')
 
     def get_subdomain(self):
         """ 获取域名 """
@@ -205,42 +199,43 @@ class EchoQueryExecute:
         status = False
         result = []
         while count:
-            try:
-                with self.session.request(
-                        method="get",
-                        url=f"https://interact.sh/poll?id={self.correlation_id}&secret={self.secret}"
-                ) as r:
-                    resp = r.json()
-                    for i in resp['data']:
-                        cipher = PKCS1_OAEP.new(RSA.importKey(self.private_key), hashAlgo=SHA256)
-                        decode = b64decode(i)
-                        crypto = AES.new(
-                            key=cipher.decrypt(b64decode(resp['aes_key'])),
-                            mode=AES.MODE_CFB,
-                            IV=decode[:AES.block_size],
-                            segment_size=128
-                        )
-                        plain_text = crypto.decrypt(decode)
-                        data = json.loads(plain_text[16:])
-                        res = '...'
-                        if data['protocol'] == 'http':
-                            options = parse_raw_request(data['raw-request'])
-                            if options['method'] == 'POST':
-                                res = options['data']
-                            elif options['method'] == 'GET':
-                                res = options['path']
-                        result.append(
-                            {
-                                'result': res,
-                                'address': data['remote-address'],
-                                'datetime': data['timestamp']
-                            }
-                        )
-                        status = True
-            except Exception as e:
+            with contextlib.suppress(Exception):
+                r = self.request(
+                    method="GET",
+                    url=f"https://interact.sh/poll?id={self.correlation_id}&secret={self.secret}",
+                    timeout=7
+                )
+                resp = r.json()
+                for i in resp['data']:
+                    cipher = PKCS1_OAEP.new(RSA.importKey(self.private_key), hashAlgo=SHA256)
+                    decode = b64decode(i)
+                    crypto = AES.new(
+                        key=cipher.decrypt(b64decode(resp['aes_key'])),
+                        mode=AES.MODE_CFB,
+                        IV=decode[:AES.block_size],
+                        segment_size=128
+                    )
+                    plain_text = crypto.decrypt(decode)
+                    data = json.loads(plain_text[16:])
+                    res = '...'
+                    if data['protocol'] == 'http':
+                        options = parse_raw_request(data['raw-request'])
+                        if options['method'] == 'POST':
+                            res = options['data']
+                        elif options['method'] == 'GET':
+                            res = options['path']
+                    result.append(
+                        {
+                            'result': res,
+                            'address': data['remote-address'],
+                            'datetime': data['timestamp']
+                        }
+                    )
+                    status = True
+            if not result:
                 count -= 1
                 time.sleep(1)
-                continue
+            break
         return status, result
 
     def verify(self):
@@ -252,7 +247,7 @@ class EchoQueryExecute:
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        return self
+        self.client.close()
 
 
 class AsyncioExecute(object):
@@ -290,7 +285,7 @@ class AsyncioExecute(object):
     def on_finish(self, future):
         if self.threshold:
             info = future.get_name()
-            match = re.search("'name':\s+'([\w().-]+)'", info)
+            match = re.search(r"'name':\s+'([\w().-]+)'", info)
             if match:
                 name = match.group(1)
             else:
@@ -312,8 +307,9 @@ class PluginBase(Request):
     target = None
 
     __info__ = {
-        "name": "-",
-        "description": "-",
+        "name": "",
+        "dork": "",
+        "description": "",
         "references": ["-"],
     }
 
@@ -358,9 +354,9 @@ class PluginBase(Request):
     def __condition__(self):
         return True
 
-    def condition(self, matches=[], logic=None):
+    def condition(self, matches=None, logic=None):
         condition = []
-        for index, match in enumerate(matches):
+        for index, match in enumerate(matches or []):
             try:
                 r = self.request(method='get', url=urllib.parse.urljoin(self.target.value, match.get('path', '.')))
                 search, dom = match.get('search', 'all'), lxml.etree.HTML(r.content)
@@ -518,5 +514,3 @@ class DictObject(dict):
 class PluginObject(dict):
     def __getattr__(self, item):
         return dict.__getitem__(self, item)
-
-

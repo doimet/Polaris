@@ -52,8 +52,8 @@ class Request:
     """ 网络封装 """
 
     def __init__(self, target=None, config=None):
-        self.target = target
-        self.config = config
+        self.target = target or {}
+        self.config = config or {}
         if config:
             self.headers = config['network']['headers']
             if not self.headers.get('User-Agent', None):
@@ -75,6 +75,12 @@ class Request:
             follow_redirects=True,
             cache=httpx_cache.FileCache(cache_dir='cache')
         )
+
+    def __del__(self):
+        self.client.close()
+
+    async def close(self):
+        await self.async_client.aclose()
 
     def request(self, method='get', url=None, path=None, *args, **kwargs):
         if not url and path and self.target:

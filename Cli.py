@@ -8,13 +8,10 @@ import toml
 import httpx
 import click
 import inspect
-import warnings
 import contextlib
 from IPy import IP
 from core.app import Application
 
-os.system('')
-warnings.filterwarnings("ignore")
 
 config = toml.load(os.path.join('conf', 'setting.toml'))
 
@@ -34,12 +31,14 @@ def cost_time(func):
 
 
 def check_version():
+    """ 检测版本 """
     latest_version = '0.0.0'
     with contextlib.suppress(Exception):
-        r = httpx.get('https://raw.githubusercontent.com/doimet/Polaris/master/conf/setting.toml', timeout=5)
-        if r.status_code == 200:
-            match = re.search(r'version = "(\d+\.\d+\.\d+)"', r.text)
-            latest_version = match.group(1)
+        if config['general']['update']:
+            r = httpx.get('https://raw.githubusercontent.com/doimet/Polaris/master/conf/setting.toml', timeout=5)
+            if r.status_code == 200:
+                match = re.search(r'version = "(\d+\.\d+\.\d+)"', r.text)
+                latest_version = match.group(1)
     return latest_version
 
 
@@ -103,11 +102,11 @@ def parse_input_param(ctx, param, value):
                 try:
                     ip_list = IP(value, make_net=True)
                     for ip in ip_list:
-                        task_list.append(('ip', str(ip)))
+                        task_list.append({'key': 'ip', 'value': str(ip)})
                 except:
                     break
             else:
-                task_list.append((key, value))
+                task_list.append({'key': key, 'value': value})
         else:
             return task_list
     click.echo('\033[0;31m[-]\033[0m Incorrect input format. PS: domain:example.com')

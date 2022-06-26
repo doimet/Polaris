@@ -6,7 +6,7 @@ class Cli:
     def __init__(self):
         self._w_depth = {}
         self._i_depth = {}
-        self.params = {}
+        # self.params = {}
         self.silent_args = None
 
     def command(self, description):
@@ -15,7 +15,7 @@ class Cli:
             if func.__name__ in self._w_depth:
                 self._w_depth[func.__name__] += 1
             else:
-                self._w_depth[func.__name__] = 1
+                self._w_depth[func.__name_e_] = 1
 
             def inner(cls, *args, **kwargs):
                 if func.__name__ in self._i_depth:
@@ -23,7 +23,7 @@ class Cli:
                 else:
                     self._i_depth[func.__name__] = 1
 
-                if kwargs.get('FLAG', False):
+                if kwargs.get('only_info', False):
                     self._i_depth[func.__name__] = self._w_depth[func.__name__]
                     return description
                 else:
@@ -91,11 +91,9 @@ class Cli:
                         self._w_depth[func.__name__] != 0 and
                         self._i_depth[func.__name__] % self._w_depth[func.__name__] == 0
                 ):
-                    if self.silent_args is not None:
-                        return func(cls, *self.silent_args)
-
                     kwargs = self.kwargs_handle(cls, kwargs)
-                    for k, v in kwargs.items():
+
+                    for k, v in ({} if self.silent_args is not None else kwargs.items()):
                         while True:
                             default_value = v['default']
                             try:
@@ -117,7 +115,12 @@ class Cli:
                             else:
                                 v['default'] = default_value
                                 break
-                    args = tuple([_['default'] for _ in kwargs.values()])
+
+                    args = [_['default'] for _ in kwargs.values()]
+                    if self.silent_args is not None:
+                        for n, i in enumerate(self.silent_args):
+                            args[n] = i
+
                     cls.event.set()
                     result = func(cls, *args)
                     cls.event.clear()

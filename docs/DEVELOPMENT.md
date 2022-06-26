@@ -147,7 +147,7 @@ class Plugin(Base):
 class Plugin(Base):
     __info__ = {
         "name": "插件名称",
-        "keyword": "搜索语法",
+        "query": "搜索语法",
         "description": "描述信息",
         "references": ["来源"],
 

@@ -3,6 +3,7 @@ import os
 import sys
 import time
 import yaml
+import warnings
 import platform
 import ipaddress
 import threading
@@ -16,17 +17,20 @@ from urllib.parse import urlparse
 from core.base import PluginBase, PluginObject, Logging, YamlPoc
 from core.common import merge_same_data, keep_data_format, get_table_form, merge_ip_segment
 from concurrent.futures import ThreadPoolExecutor, as_completed, wait, ALL_COMPLETED
-
 from core.static import CdnList
+
+os.system('')
+warnings.filterwarnings("ignore")
 
 
 class Application:
 
-    def __init__(self, config=None, options=None):
-        self.log = Logging(level=options['verbose'])
-        self.options = options
-        self.config = config
+    def __init__(self, config, options=None, is_cli=True):
+        self.log = Logging(level=options.get('version', 20) if options else 20)
+        self.options = options or {}
+        self.config = config or {}
         self.dataset = []
+        self.infoset = []
         self.job_total = 1
         self.job_count = 0
         self.threshold = {'name': '-', 'count': 0, 'total': 0, 'stop': 0}
@@ -36,11 +40,12 @@ class Application:
         self.event = threading.Event()
         self.event.set()
         self.records = {}
+        self.is_cli = is_cli
         self.is_first_run = True
 
     def setup(self):
         """ 判断dataset中是否有数据 有数据表示不是第一次运行 需要从dataset中提取数据当输入 """
-        if self.dataset:
+        if self.dataset and self.is_cli:
             task_list = self.create_task(self.dataset)
         elif 'input' in self.options.keys():
             task_list = self.options.pop('input')
@@ -48,21 +53,27 @@ class Application:
             return
         self.job_total = len(task_list)
         for task in task_list:
-            self.log.root(f"Target: {task[1]}")
-            if self.is_first_run:
+            self.log.root(f"Target: {task['value']}")
+            # 仅命令行模式可以打印进度信息
+            if self.is_first_run and self.is_cli:
                 threading.Thread(target=self.on_monitor, daemon=True).start()
                 self.is_first_run = False
-            status, message = self.check_target(*task)
+            status, message = self.check_target(task["key"], task["value"])
             if status:
                 content = self.job_execute(task)
                 if content:
                     # 存在则更新;不存在则添加
                     for data in self.dataset:
-                        if task[1] in data['root']:
+                        if task['value'] in data['root']:
                             data['content'].update({self.options['command']: content})
                             break
                     else:
-                        self.dataset.append({'root': task[1], 'content': {self.options['command']: content}})
+                        self.dataset.append(
+                            {
+                                'root': task['value'],
+                                'content': {self.options['command']: content}
+                            }
+                        )
             else:
                 self.log.error(message)
             self.job_count += 1
@@ -70,9 +81,10 @@ class Application:
     def shows(self, att=None):
         """ 获取插件列表 """
         show_list = []
+        info_list = []
         base_path = os.path.join('plugins', self.options['command'])
         if 'input' in self.options.keys() and self.options['input']:
-            att = self.options['input'][0][0]
+            att = self.options['input'][0].get("key")
         for file_path, file_name, file_ext in self.get_plugin_list(base_path, self.options['plugin'], att):
             plugin_obj = self.get_plugin_object(os.path.join(file_path, file_name + file_ext))
 
@@ -80,12 +92,11 @@ class Application:
             plugin_inst = plugin_obj({}, {}, {}, None, {})
             inner_method = plugin_inst.__method__
             decorate_method = plugin_inst.__decorate__
-            if self.options['console'] and len(decorate_method) == 0:
+            if self.options.get('console') and len(decorate_method) == 0:
                 continue
 
-            status = '\033[0;31mDisable\033[0m' if (
-                    file_name in self.config.keys() and self.config[file_name].get('enable', False)
-            ) else '\033[0;92mEnable\033[0m'
+            status = file_name in self.config.keys() and self.config[file_name].get('enable', False)
+            status_info = '\033[0;31mDisable\033[0m' if status else '\033[0;92mEnable\033[0m'
             if platform.system() == 'Windows':
                 sp = file_path.split('\\')
             else:
@@ -94,6 +105,8 @@ class Application:
                 app_name = sp[2]
             else:
                 app_name = '-'
+            plugin_info.update({'app': app_name, 'plugin': file_name, 'status': status})
+            info_list.append(plugin_info)
             show_list.append(
                 [
                     {
@@ -102,17 +115,18 @@ class Application:
                         '应用': app_name,
                         '描述': plugin_info['description'],
                         '支持': ','.join(inner_method),
-                        '状态': status
+                        '状态': status_info
                     },
                     {
                         '插件': file_name,
                         '名称': plugin_info['name'],
                         '应用': app_name,
                         '描述': plugin_info['description'],
+                        '语法': plugin_info['dork'],
                         '支持': ','.join(inner_method),
                         '来源': ', '.join(plugin_info['references']) if isinstance(plugin_info['references'], list) else
                         plugin_info['references'],
-                        '状态': status,
+                        '状态': status_info,
                     }
                 ]
             )
@@ -121,6 +135,7 @@ class Application:
         else:
             is_show_detail = False
 
+        self.infoset = info_list
         plugin_list = sorted([_[is_show_detail] for _ in show_list], key=lambda keys: keys['插件'])
         if len(plugin_list) == 0:
             self.log.root(f'Not found {self.options["command"]} plugin')
@@ -141,14 +156,14 @@ class Application:
             callback = functools.partial(self.log.critical, 'export file format not support')
             getattr(output_object, 'export_' + file_ext[1:], callback)(self.options['output'], self.dataset)
 
-    def job_execute(self, target_tuple: tuple):
+    def job_execute(self, target: dict):
         """ 任务执行器 """
         depth = self.config['general']['depth']
         max_workers = self.config['general']['threads']
-        task_list, result, cache, taskset = [], [], set(), [target_tuple]
+        task_list, result, cache, taskset = [], [], set(), [target]
         base_path = os.path.join('plugins', self.options['command'])
         # 交互/非交互 处理逻辑
-        if self.options['console']:
+        if self.options.get('console'):
             # 设置日志模式
             self.log.set_mode(1)
             # 暂停消息线程
@@ -161,7 +176,7 @@ class Application:
             self.log.echo(r" \____/\____/\_/  \|\____/\____/\____/\____\ ")
             self.log.echo("")
             if len(self.options['plugin']) == 1:
-                match_result = self.search_plugin_object(base_path, self.options['plugin'], target_tuple)
+                match_result = self.search_plugin_object(base_path, self.options['plugin'], target)
                 obj, prompt = match_result[0][2], self.options['plugin'][0]
             else:
                 obj, prompt = None, 'localhost'
@@ -191,14 +206,14 @@ class Application:
                 elif command in ['run']:
                     if obj:
                         self.event.set()
-                        res = getattr(obj, target_tuple[0])()
+                        res = getattr(obj, target["key"])()
                         self.event.clear()
                         self.msg_handle(name=prompt, data=res)
                     else:
                         self.log.warn('Not Found Plugin')
                 elif command == 'use':
                     self.options['plugin'] = (args[0],)
-                    match_result = self.search_plugin_object(base_path, self.options['plugin'], target_tuple)
+                    match_result = self.search_plugin_object(base_path, self.options['plugin'], target)
                     if len(match_result) == 1:
                         obj, prompt = match_result[0][2], match_result[0][1]
                     elif len(match_result) > 1:
@@ -211,7 +226,7 @@ class Application:
                         self.log.info('插件方法:')
                         custom_method = {}
                         for func_name in obj.__decorate__:
-                            desc = getattr(obj, func_name)(FLAG=True)
+                            desc = getattr(obj, func_name)(only_info=True)
                             custom_method[func_name] = desc
                         tb = get_table_form([custom_method], layout='vertical', title=['方法', '描述'], rank=False)
                         self.log.echo(tb)
@@ -231,18 +246,18 @@ class Application:
         else:
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
                 while taskset and depth != 0:
-                    for target_tuple in taskset:
-                        if target_tuple in cache:
+                    for target in taskset:
+                        if str(target) in cache:
                             continue
-                        match_result = self.search_plugin_object(base_path, self.options['plugin'], target_tuple)
+                        match_result = self.search_plugin_object(base_path, self.options['plugin'], target)
                         for plugin_path, plugin_name, plugin_object in match_result:
-                            if target_tuple[0] not in dir(plugin_object):
+                            if target["key"] not in dir(plugin_object):
                                 continue
                             self.job_total += 1
-                            future = executor.submit(self.job_func, plugin_name, target_tuple, plugin_object)
+                            future = executor.submit(self.job_func, plugin_name, target, plugin_object)
                             future.add_done_callback(self.on_finish)
                             task_list.append(future)
-                        cache.add(target_tuple)
+                        cache.add(str(target))
                     wait(task_list, return_when=ALL_COMPLETED)
                     for future in as_completed(task_list):
                         result.append(future.result())
@@ -307,9 +322,9 @@ class Application:
         """ 创建任务 """
         task_list = []
         for subdomain in self.extract_data('subdomain', data, []):
-            task_list.append(('subdomain', subdomain))
+            task_list.append({"key": "subdomain", "value": subdomain})
         for url in self.extract_data('url', data, []):
-            task_list.append(('url', url))
+            task_list.append({"key": "url", "value": url})
         return task_list
 
     def extract_data(self, key, data, res=None):
@@ -344,6 +359,7 @@ class Application:
 
     @staticmethod
     def check_target(key, value):
+        return True, 'access normal'
         """
         检测目标指标:
         1.ip检测目标存活、检测cdn
@@ -351,7 +367,7 @@ class Application:
         """
         if key == 'url':
             try:
-                request = Request({}, {})
+                request = Request()
                 request.request(method="get", url=value, timeout=15)
             except Exception as e:
                 return False, 'the target cannot access'
@@ -367,7 +383,12 @@ class Application:
             self.log.child(f'{key}: {str(data).strip()} {name}')
         elif isinstance(data, list) and len(data) != 0:
             self.log.child(f'{key}: {len(data)} {name}')
-            table = get_table_form(data)
+            if len(data) == 1:
+                data = data[0]
+                layout = 'vertical'
+            else:
+                layout = 'horizontal'
+            table = get_table_form(data, layout=layout)
             self.log.child(table)
         elif isinstance(data, dict):
             if all(map(lambda x: isinstance(x, dict) or isinstance(x, list), data.values())):
@@ -379,7 +400,7 @@ class Application:
                 table = get_table_form(data, layout='vertical')
                 self.log.child(table)
 
-    def job_func(self, plugin_name, target_tuple: tuple, plugin_object):
+    def job_func(self, plugin_name, target: dict, plugin_object):
         """ 任务函数 """
         thread_object = threading.current_thread()
         self.next_job = thread_object.name = plugin_name
@@ -390,10 +411,10 @@ class Application:
                     """ 指定插件时 判断插件是否被禁用 并打印提示 """
                     raise Exception(f'The plug-in is disabled')
             if plugin_object.__condition__():
-                data = getattr(plugin_object, target_tuple[0])()
+                data = getattr(plugin_object, target["key"])()
                 return data
             else:
-                self.log.debug(f'执行条件不成立 (plugin:{plugin_name})')
+                raise Exception(f'执行条件不成立')
         except Exception as e:
             self.log.warn(f'{str(e)} (plugin:{plugin_name})')
 
@@ -404,7 +425,7 @@ class Application:
             self.last_job = thread.name
             data = merge_same_data(worker.result(), {})
             # 如进入控制台模式则需跳过此逻辑
-            if not self.options['console']:
+            if not self.options.get('console'):
                 self.msg_handle(name=thread.name, data=data)
 
     def on_monitor(self):
@@ -429,14 +450,14 @@ class Application:
     def search_plugin_object(self, base_path, plugin_name=None, target=None):
         """ 通过插件名称获取插件对象 """
         match_result = []
-        for file_path, file_name, file_ext in self.get_plugin_list(base_path, plugin_name, target[0]):
+        for file_path, file_name, file_ext in self.get_plugin_list(base_path, plugin_name, target["key"]):
             plugin_class = self.get_plugin_object(os.path.join(file_path, file_name + file_ext))
-            target_dict = {'key': target[0], 'value': target[1], 'ip': '', 'port': '', 'url': '', 'host': ''}
-            if 'http://' in target[1] or 'https://' in target[1]:
-                url_obj = urlparse(target[1])
+            target_dict = {'key': target["key"], 'value': target["value"], 'ip': '', 'port': '', 'url': '', 'host': ''}
+            if 'http://' in target["value"] or 'https://' in target["value"]:
+                url_obj = urlparse(target["value"])
                 target_dict.update(
                     {
-                        'url': f'{url_obj.scheme}://{url_obj.hostname}',
+                        'url': url_obj.geturl(),
                         'scheme': url_obj.scheme,
                         'host': url_obj.netloc,
                         'ip': url_obj.hostname,

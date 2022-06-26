@@ -1,5 +1,10 @@
 # -*-* coding:UTF-8
+import base64
+import contextlib
+import hmac
 import re
+import time
+
 import prettytable
 from itertools import chain
 
@@ -29,8 +34,10 @@ def merge_same_data(data, result):
                         result[key].append(i)
             elif isinstance(value, dict):
                 if key not in result.keys():
-                    result[key] = {}
-                result[key].update(value)
+                    result[key] = [value]
+                else:
+                    result[key].append(value)
+                # result[key].update(value)
             else:
                 if key not in result.keys():
                     result[key] = value
@@ -153,6 +160,27 @@ class Interval(object):
     def change(self, new_st, new_ed):
         self.st = new_st
         self.ed = new_ed
+
+
+def generate_token(key, expire=3600*12*365):
+    """ 生成token """
+    ts_str = str(time.time() + expire)
+    ts_byte = ts_str.encode("utf-8")
+    sha1 = hmac.new(key.encode("utf-8"), ts_byte, 'sha1').hexdigest()
+    token = ts_str + ':' + sha1
+    b64_token = base64.urlsafe_b64encode(token.encode("utf-8"))
+    return b64_token.decode("utf-8")
+
+
+def verify_token(token, key):
+    with contextlib.suppress(Exception):
+        sp = base64.urlsafe_b64decode(token).decode('utf-8').split(':')
+        if (
+                float(sp[0]) >= time.time() and
+                hmac.new(key.encode("utf-8"), sp[0].encode('utf-8'), 'sha1').hexdigest() == sp[1]
+        ):
+            return True
+    return False
 
 
 def merge_ip_segment(ip_list):
