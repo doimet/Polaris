@@ -116,7 +116,7 @@ class Logging(logging.Logger):
         if self.isEnabledFor(40) and msg is not None:
             if not self.is_console_mode:
                 msg = f'\033[0;31m{msg}\033[0m'
-            shape = '\r\033[0;31m[-]\033[0m' if self.is_console_mode else '\r\033[0;31m | \033[0m'
+            shape = '\r\033[0;31m[-]\033[0m' if self.is_console_mode else '\r\033[0;34m | \033[0m'
             self._log(40, self.make_record("{} {}".format(shape, str(msg) + (100 - len(str(msg))) * ' ')), args,
                       **kwargs)
 
