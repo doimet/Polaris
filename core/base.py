@@ -168,7 +168,8 @@ class EchoQueryExecute(Request):
                 "secret-key": self.secret,
                 "correlation-id": self.correlation_id
             },
-            headers={"Content-Type": "application/json"}
+            headers={"Content-Type": "application/json"},
+            timeout=15
         )
         if 'registration successful' not in r.text:
             raise Exception('interact register failure')

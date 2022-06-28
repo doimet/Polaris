@@ -76,7 +76,7 @@
     python Cli.py --input domain:example.com collect --plugin !ksubdomain
     python Cli.py --input dork:184.173.106.60 collect --plugin zoomeye --console
     ```
-  ![Image](docs/images/screenshot_08.png)
+    ![Image](docs/images/screenshot_08.png)
 + 收集ip信息
     ```shell script
     python Cli.py --input ip:x.x.x.x collect
@@ -89,16 +89,14 @@
     ```shell script
     python Cli.py --input company:北京奇虎科技有限公司 collect --plugin aiqicha
     ```
-  ![Image](docs/images/screenshot_09.png)
+    ![Image](docs/images/screenshot_09.png)
 
 ### 漏洞利用
-
 ```shell script
 python Cli.py --input url:http://example.com exploit
 python Cli.py --input url:http://example.com exploit --plugin CVE-2021-22205
 python Cli.py --input url:http://example.com exploit --plugin CVE-2021-22205 --console
 ```
-
 ![Image](docs/images/screenshot_10.png)
 ![Image](docs/images/screenshot_11.png)
 指定`console`参数可进入交互模式, 输入help列出帮助信息
