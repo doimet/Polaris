@@ -53,11 +53,6 @@
     ```
   ![Image](docs/images/screenshot_06.png)
   可选类型: `ip`、`domain`、`subdomain`、`url`、`company`、`email`、`md5`等
-+ 模糊匹配插件
-    ```shell script
-    python Cli.py {命令} --plugin '%{插件}' --list
-    ```
-  ![Image](docs/images/screenshot_07.png)
 + 运行命令格式
     ```shell script
     python Cli.py --input {类型}:{目标/文件} {调用命令} {调用参数}

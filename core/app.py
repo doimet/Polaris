@@ -121,8 +121,8 @@ class Application:
                         '插件': file_name,
                         '名称': plugin_info['name'],
                         '应用': app_name,
-                        '描述': plugin_info['description'],
                         '语法': plugin_info['dork'],
+                        '描述': plugin_info['description'],
                         '支持': ','.join(inner_method),
                         '来源': ', '.join(plugin_info['references']) if isinstance(plugin_info['references'], list) else
                         plugin_info['references'],
@@ -502,11 +502,11 @@ class Application:
                             continue
                         else:
                             res.add((file_path, file_stem, file_ext))
-                    elif plugin.startswith('%') and plugin.strip('%').lower() in file_stem.lower():
-                        res.add((file_path, file_stem, file_ext))
                     elif file_stem.lower() == plugin.lower() or is_exclude:
                         res.add((file_path, file_stem, file_ext))
-                    elif plugin.lower() in file_path.lower():
+                    # elif plugin.startswith('%') and plugin.strip('%').lower() in file_stem.lower():
+                    #     res.add((file_path, file_stem, file_ext))
+                    elif plugin.lower() in file_path.lower() or plugin.lower() in file_stem.lower():
                         res.add((file_path, file_stem, file_ext))
                     else:
                         continue
